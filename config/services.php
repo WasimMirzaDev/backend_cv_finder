@@ -21,8 +21,8 @@ return [
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
     ],
-    'gpt4o-mini' => [
-        'api_key' => env('GPT4O_MINI_API_KEY'),
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),

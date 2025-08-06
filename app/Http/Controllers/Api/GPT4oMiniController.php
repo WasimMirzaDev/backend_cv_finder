@@ -21,7 +21,7 @@ class GPT4oMiniController extends Controller
             'description' => 'required|string|max:1000',
         ]);
 
-        $apiKey = config('services.gpt4o-mini.api_key');
+        $apiKey = config('services.openai.api_key');
 
         $prompt = <<<EOT
             You are a CV builder assistant.
@@ -235,7 +235,7 @@ class GPT4oMiniController extends Controller
         ]);
 
         $paragraph = $request->input('paragraph');
-        $apiKey = config('services.gpt4o-mini.api_key');
+        $apiKey = config('services.openai.api_key');
 
         try {
             // Single API call to get both analysis and suggestions

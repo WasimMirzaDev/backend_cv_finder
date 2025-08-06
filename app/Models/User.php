@@ -7,6 +7,10 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\QuestionType;
+use App\Models\Role;
+use App\Models\EducationLevel;
+use App\Models\Subcategory;
 
 class User extends Authenticatable
 {
@@ -21,6 +25,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'preferred_industry_id',
+        'role_id',
+        'education_level_id',
+        'linkedin_profile_url',
         'password',
     ];
 
@@ -33,6 +41,30 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+
+    protected $appends = ['preferred_industry', 'role', 'education_level', 'preferred_industry_type'];
+
+    public function getPreferredIndustryAttribute()
+    {
+        return $this->preferred_industry_id ? Subcategory::find($this->preferred_industry_id) : null;
+    }
+    public function getPreferredIndustryTypeAttribute()
+    {
+        if ($this->preferred_industry && isset($this->preferred_industry->questiontype_id)) {
+            return QuestionType::find($this->preferred_industry->questiontype_id);
+        }
+        return null;
+    }
+    public function getRoleAttribute()
+    {
+        return $this->role_id ? Role::find($this->role_id) : null;
+    }
+
+    public function getEducationLevelAttribute()
+    {
+        return $this->education_level_id ? EducationLevel::find($this->education_level_id) : null;
+    }
 
     /**
      * Get the attributes that should be cast.
