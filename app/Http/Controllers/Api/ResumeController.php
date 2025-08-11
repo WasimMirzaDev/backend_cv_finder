@@ -161,7 +161,7 @@ class ResumeController extends Controller
     //      ]);
     //  }
 
-     public function parseResume(Request $request)
+     public function parseResumeOCRPyScript(Request $request)
      {
          $request->validate([
              'file' => 'required|mimes:pdf|max:20480'

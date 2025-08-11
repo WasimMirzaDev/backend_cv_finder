@@ -50,7 +50,7 @@ Route::get('/test', function () {
 
 // Resume parsing endpoint
 Route::post('/generate-cv-ai', [GPT4oMiniController::class, 'generateCvAi']);
-Route::post('/parse-resume', [ResumeController::class, 'parseResumeGPT']);
+Route::post('/parse-resume', [ResumeController::class, 'parseResumeOCRPyScript']);
 Route::post('/analyze-paragraph', [GPT4oMiniController::class, 'analyzeResume']);
 Route::get('/migrate', function () {
     \Illuminate\Support\Facades\Artisan::call('migrate');
