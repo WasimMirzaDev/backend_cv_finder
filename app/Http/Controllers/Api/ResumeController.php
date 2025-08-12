@@ -275,9 +275,21 @@ class ResumeController extends Controller
          $file->move(storage_path('app/temp'), $file->getClientOriginalName());
          
          $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
-         $output = shell_exec($command);
+      //    $command = sprintf(
+      //     '%s %s "%s"',
+      //     escapeshellarg($pythonPath),
+      //     escapeshellarg($scriptPath),
+      //     str_replace('"', '\"', $filePath)
+      // );
+         $output = [];
+         $returnVar = 0;
+         exec($command . ' 2>&1', $output, $returnVar);
+         $output = implode("\n", $output);
 
          dd($output);
+
+         $output = shell_exec($command);
+
          // Ensure clean UTF-8 output
          $output = trim($output);
          $cleanOutput = mb_convert_encoding($output, 'UTF-8', 'UTF-8');
