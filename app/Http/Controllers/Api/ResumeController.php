@@ -266,7 +266,274 @@ class ResumeController extends Controller
 
      public function parseResumeOCRPyScript(Request $request)
      {
-       return "command";
+         $request->validate([
+             'file' => 'required|mimes:pdf|max:20480'
+         ]);
+         $model = $request->model ?? 'gpt-4o-mini';
+         $file = $request->file('file');
+         $path = storage_path('app/temp/' . $file->getClientOriginalName());
+         $file->move(storage_path('app/temp'), $file->getClientOriginalName());
+         $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
+         $scriptPath = public_path('scripts/parse_resume.py');
+        //  $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
+         $command = sprintf(
+          '%s %s "%s"',
+          escapeshellarg($pythonPath),
+          escapeshellarg($scriptPath),
+          str_replace('"', '\"', $path)
+      );
+         $output = [];
+         $returnVar = 0;
+         exec($command . ' 2>&1', $output, $returnVar);
+         $output = implode("\n", $output);
+
+         dd($output);
+
+         $output = shell_exec($command);
+
+         // Ensure clean UTF-8 output
+         $output = trim($output);
+         $cleanOutput = mb_convert_encoding($output, 'UTF-8', 'UTF-8');
+     
+         $decoded = json_decode($cleanOutput, true);
+     
+        //  if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['data']['raw_text'])) {
+        //      return response()->json([
+        //          'success' => false,
+        //          'message' => 'Invalid JSON or malformed UTF-8 from Python',
+        //          'raw_output' => $cleanOutput
+        //      ], 500);
+        //  }
+     
+         // Ensure raw_text is valid UTF-8 for response
+        //  $rawText = mb_convert_encoding($decoded['data']['raw_text'], 'UTF-8', 'UTF-8');
+     
+        //  return response()->json([
+        //      'success' => true,
+        //      'data' => $rawText
+        //  ], 200, [], JSON_UNESCAPED_UNICODE);
+         
+
+         try {
+            $apiKey = config('services.openai.api_key');
+        
+            // Construct detailed evaluation prompt based on the framework
+            $prompt = <<<PROMPT
+You are a resume parsing AI. Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
+
+### RAW TEXT:
+"{$cleanOutput}"
+
+### REQUIRED JSON FORMAT:
+{
+"data": {
+"candidateName": [
+{
+"firstName": "",
+"familyName": ""
+}
+],
+"headline": "",
+"website": null,
+"preferredWorkLocation": null,
+"willingToRelocate": null,
+"objective": null,
+"association": null,
+"hobby": null,
+"patent": null,
+"publication": null,
+"referee": null,
+"dateOfBirth": null,
+"headshot": null,
+"nationality": null,
+"email": [""],
+"phoneNumber": [
+{
+"rawText": "",
+"countryCode": "",
+"nationalNumber": "",
+"formattedNumber": "",
+"internationalCountryCode": ""
+}
+],
+"location": {
+"city": "",
+"state": "",
+"poBox": null,
+"street": null,
+"country": "",
+"latitude": null,
+"formatted": "",
+"longitude": null,
+"rawInput": "",
+"stateCode": "",
+"postalCode": null,
+"countryCode": "",
+"streetNumber": null,
+"apartmentNumber": null
+},
+"availability": null,
+"summary": "",
+"expectedSalary": null,
+"education": [
+{
+"educationAccreditation": "",
+"educationOrganization": "",
+"educationDates": {
+  "end": {
+    "day": null,
+    "date": "",
+    "year": null,
+    "month": null,
+    "isCurrent": false
+  },
+  "start": {
+    "day": null,
+    "date": "",
+    "year": null,
+    "month": null,
+    "isCurrent": false
+  },
+  "durationInMonths": null
+},
+"educationMajor": [],
+"educationLevel": {
+  "id": null,
+  "label": "",
+  "value": ""
+}
+}
+],
+"workExperience": [
+{
+"workExperienceJobTitle": "",
+"workExperienceOrganization": "",
+"workExperienceDates": {
+  "end": {
+    "day": null,
+    "date": "",
+    "year": null,
+    "month": null,
+    "isCurrent": true
+  },
+  "start": {
+    "day": null,
+    "date": "",
+    "year": null,
+    "month": null,
+    "isCurrent": false
+  },
+  "durationInMonths": null
+},
+"workExperienceDescription": "",
+"workExperienceType": {
+  "id": null,
+  "label": "",
+  "value": ""
+}
+}
+],
+"totalYearsExperience": null,
+"project": null,
+"achievement": null,
+"rightToWork": null,
+"languages": [
+{
+"name": "",
+"level": null
+}
+],
+"skill": [
+{
+"name": "",
+"type": "Specialized Skill"
+}
+]
+}
+}
+
+Rules:
+- Respond ONLY with JSON — no extra commentary.
+- Leave fields as `null` if the value is unknown or not found.
+- Ensure `rawText` contains the same original content provided.
+PROMPT;
+
+            $gptResponse = Http::timeout(60)->withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+            ])->post('https://api.openai.com/v1/chat/completions', [
+                'model' => $model, // Dynamic model selection
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a professional JSON resume parser. Respond ONLY with valid full JSON.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ],
+                'temperature' => 0.0, // Minimize randomness
+                'response_format' => ['type' => 'json_object'], // Ensure JSON output
+                'max_tokens' => 2048, // Allow for detailed evaluation
+            ]);
+
+        
+            $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
+            $parsedData = json_decode($evaluation, true);
+
+            if (isset($evaluation)) {
+                $aiText = $evaluation;
+
+                // Extract only the JSON part
+                $jsonStart = strpos($aiText, '{');
+                if ($jsonStart !== false) {
+                    $jsonString = substr($aiText, $jsonStart);
+                    $decoded = json_decode($jsonString, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+                        return response()->json($decoded);
+                    }
+
+                    return response()->json([
+                        'error' => 'Invalid JSON from GPT-4o',
+                        'raw' => $aiText,
+                    ], 500);
+                }
+
+                return response()->json([
+                    'error' => 'No JSON found in GPT-4o response',
+                    'raw' => $aiText,
+                ], 500);
+            }
+
+            // return $parsedData;
+
+            if ($gptResponse->json()) {
+                $pdfParsed = new PdfParsed();
+                $pdfParsed->ip_address = $request->ip();
+                $pdfParsed->user_agent = $request->userAgent();
+                if (isset($parsedData['data']['candidateName'][0]['firstName'], $parsedData['data']['candidateName'][0]['familyName'])) {
+                    $pdfParsed->full_name = $parsedData['data']['candidateName'][0]['firstName'] . ' ' . $parsedData['data']['candidateName'][0]['familyName'];
+                }
+                $pdfParsed->file_name = $file->getClientOriginalName();
+                $pdfParsed->parsed_data = $parsedData;
+                $pdfParsed->save();
+                return response()->json([
+                    'success' => true,
+                    'data' => $parsedData
+                ]);
+            }
+
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to get evaluation from AI model', 'details' => $e->getMessage()], 500);
+        }
+     
+         return response()->json([
+             'success' => true,
+             'data' => $decoded
+         ]);
      }
      
 
