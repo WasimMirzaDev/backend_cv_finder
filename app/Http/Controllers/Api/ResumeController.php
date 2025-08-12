@@ -183,7 +183,7 @@ class ResumeController extends Controller
             
             // Define the Python command
             $pythonPath = '/var/www/html/backend_cv_finder/env/python3';
-            $scriptPath = base_path('scripts/parse_resume.py');
+            $scriptPath = public_path('scripts/parse_resume.py');
             
             // Check if Python script exists
             if (!file_exists($scriptPath)) {
