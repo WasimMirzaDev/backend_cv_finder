@@ -276,6 +276,7 @@ class ResumeController extends Controller
          $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
          $scriptPath = public_path('scripts/parse_resume.py');
         //  $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
+        dd("command: ");
          $command = sprintf(
           '%s %s "%s"',
           escapeshellarg($pythonPath),
@@ -287,7 +288,6 @@ class ResumeController extends Controller
          exec($command . ' 2>&1', $output, $returnVar);
          $output = implode("\n", $output);
 
-         dd($output);
 
          $output = shell_exec($command);
 
