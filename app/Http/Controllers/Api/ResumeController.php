@@ -181,8 +181,31 @@ class ResumeController extends Controller
                 ], 404);
             }
             
-            // Define the Python command
-            $pythonPath = '/var/www/html/backend_cv_finder/env/python3';
+            // Define the Python command - using the virtual environment's Python
+            // First try with the full path to the virtual environment's Python
+            $possiblePythonPaths = [
+                base_path('env/bin/python'),    // Common Linux virtualenv location
+                base_path('venv/bin/python'),   // Common virtualenv location
+                base_path('.venv/bin/python'),  // Common virtualenv location
+                base_path('env/Scripts/python.exe'),  // Windows virtualenv
+                base_path('venv/Scripts/python.exe'), // Windows virtualenv
+                '/usr/bin/python3',             // System Python 3
+                '/usr/local/bin/python3',       // Alternative system Python 3
+                'python3',                      // Fallback to system PATH
+            ];
+            
+            $pythonPath = '';
+            foreach ($possiblePythonPaths as $path) {
+                if (is_executable($path)) {
+                    $pythonPath = $path;
+                    break;
+                }
+            }
+            
+            if (empty($pythonPath)) {
+                throw new \RuntimeException('Could not find a valid Python executable. Tried: ' . implode(', ', $possiblePythonPaths));
+            }
+            
             $scriptPath = public_path('scripts/parse_resume.py');
             
             // Check if Python script exists
