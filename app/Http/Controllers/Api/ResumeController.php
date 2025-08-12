@@ -162,16 +162,105 @@ class ResumeController extends Controller
     //  }
 
     public function staticFileRunner(){
-        $filePath = public_path('demo_cv/CV_DEMO.pdf');
-        
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => 'Demo CV file not found'], 404);
+        try {
+            // Define the path to the demo CV file
+            $filePath = public_path('demo_cv/CV_DEMO.pdf');
+            
+            // Log the file path for debugging
+            \Log::info('Attempting to process file: ' . $filePath);
+            
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                \Log::error('File not found: ' . $filePath);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Demo CV file not found at: ' . $filePath,
+                    'file_exists' => file_exists($filePath),
+                    'directory' => dirname($filePath),
+                    'files_in_directory' => file_exists(dirname($filePath)) ? scandir(dirname($filePath)) : []
+                ], 404);
+            }
+            
+            // Define the Python command
+            $pythonPath = '/var/www/html/backend_cv_finder/env/python3';
+            $scriptPath = base_path('scripts/parse_resume.py');
+            
+            // Check if Python script exists
+            if (!file_exists($scriptPath)) {
+                \Log::error('Python script not found: ' . $scriptPath);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Python script not found',
+                    'script_path' => $scriptPath,
+                    'script_exists' => file_exists($scriptPath)
+                ], 500);
+            }
+            
+            // Build and execute the command
+            $command = sprintf(
+                '%s %s "%s"',
+                escapeshellarg($pythonPath),
+                escapeshellarg($scriptPath),
+                str_replace('"', '\"', $filePath)
+            );
+            
+            \Log::info('Executing command: ' . $command);
+            
+            // Execute the command and capture output and return code
+            $output = [];
+            $returnVar = 0;
+            exec($command . ' 2>&1', $output, $returnVar);
+            $output = implode("\n", $output);
+            
+            // Log the raw output for debugging
+            \Log::info('Python script output:', ['output' => $output]);
+            
+            // Handle command execution errors
+            if ($returnVar !== 0) {
+                throw new \RuntimeException("Python script execution failed with code: $returnVar");
+            }
+            
+            // Try to decode the JSON output
+            $decodedOutput = json_decode($output, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \RuntimeException("Failed to decode JSON output: " . json_last_error_msg());
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $decodedOutput,
+                'debug' => [
+                    'file_path' => $filePath,
+                    'file_exists' => file_exists($filePath),
+                    'command' => $command,
+                    'return_code' => $returnVar
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in staticFileRunner: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'exception' => [
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ],
+                'debug' => [
+                    'file_path' => $filePath ?? 'not set',
+                    'file_exists' => isset($filePath) ? file_exists($filePath) : 'file path not set',
+                    'last_output' => $output ?? 'no output captured'
+                ]
+            ], 500);
         }
-        
-        $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/python3 scripts/parse_resume.py \"$filePath\"");
-        $output = shell_exec($command);
-        dd($output);
-        return response()->json($output);
     }
 
 
