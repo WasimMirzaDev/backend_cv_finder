@@ -287,7 +287,6 @@ class ResumeController extends Controller
          exec($command . ' 2>&1', $output, $returnVar);
          $output = implode("\n", $output);
 
-         dd($output);
 
          $output = shell_exec($command);
 
