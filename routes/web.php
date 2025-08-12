@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\Api\ResumeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -10,6 +11,8 @@ Route::get('/migrate', function () {
     \Illuminate\Support\Facades\Artisan::call('migrate');
     return "Migrate Complete!";
 });
+
+Route::get('/static-file-runner', [ResumeController::class, 'staticFileRunner']);
 
 Route::get('/seed', function () {
     \Illuminate\Support\Facades\Artisan::call('db:seed');

@@ -161,6 +161,20 @@ class ResumeController extends Controller
     //      ]);
     //  }
 
+    public function staticFileRunner(){
+        $filePath = public_path('demo_cv/CV_DEMO.pdf');
+        
+        if (!file_exists($filePath)) {
+            return response()->json(['error' => 'Demo CV file not found'], 404);
+        }
+        
+        $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/python3 scripts/parse_resume.py \"$filePath\"");
+        $output = shell_exec($command);
+        dd($output);
+        return response()->json($output);
+    }
+
+
      public function parseResumeOCRPyScript(Request $request)
      {
          $request->validate([
@@ -170,6 +184,7 @@ class ResumeController extends Controller
          $file = $request->file('file');
          $path = storage_path('app/temp/' . $file->getClientOriginalName());
          $file->move(storage_path('app/temp'), $file->getClientOriginalName());
+         
          $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/python3 scripts/parse_resume.py \"$path\"");
          $output = shell_exec($command);
 
