@@ -274,7 +274,7 @@ class ResumeController extends Controller
          $path = storage_path('app/temp/' . $file->getClientOriginalName());
          $file->move(storage_path('app/temp'), $file->getClientOriginalName());
          
-         $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/python3 scripts/parse_resume.py \"$path\"");
+         $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
          $output = shell_exec($command);
 
          dd($output);
