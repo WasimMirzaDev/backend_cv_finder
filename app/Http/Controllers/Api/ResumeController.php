@@ -266,6 +266,7 @@ class ResumeController extends Controller
 
      public function parseResumeOCRPyScript(Request $request)
      {
+       dd("command: ");
          $request->validate([
              'file' => 'required|mimes:pdf|max:20480'
          ]);
@@ -276,7 +277,6 @@ class ResumeController extends Controller
          $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
          $scriptPath = public_path('scripts/parse_resume.py');
         //  $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
-        dd("command: ");
          $command = sprintf(
           '%s %s "%s"',
           escapeshellarg($pythonPath),
