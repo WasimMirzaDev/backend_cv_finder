@@ -266,8 +266,7 @@ class ResumeController extends Controller
 
      public function parseResumeOCRPyScript(Request $request)
      {
-       dd("command");
-        
+       return "command";
      }
      
 
