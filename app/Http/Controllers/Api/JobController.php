@@ -15,7 +15,7 @@ class JobController extends Controller
                 'X-API-KEY' => '005f8ef3c4798d43c893c97f43a75cbafba428d4', // Consider moving this to .env
                 'Content-Type' => 'application/json',
             ])->post('https://google.serper.dev/search', [
-                'q' => $request->input('q', 'software developer jobs'), // Default query
+                'q' => $request->input('q', 'software developer job'), // Default query
                 'location' => $request->input('location'),
                 'gl' => $request->input('gl', 'us'),
                 'num' => $request->input('num', 10),
