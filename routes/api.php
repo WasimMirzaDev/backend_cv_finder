@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\QuestionFilterController;
 use App\Http\Controllers\Api\InterviewController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CvRecentActivityController;
+use App\Http\Controllers\Api\JobController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //recent acitivities
     Route::get('/recent-activities', [CvRecentActivityController::class, 'index']);
+
+    Route::get('/fetch-jobs', [JobController::class, 'fetchJobs']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -75,4 +78,6 @@ Route::get('/questions/{questionId}', [QuestionController::class, 'getQuestion']
 Route::get('/get-industries', [UserController::class, 'getIndustries']);
 Route::get('/get-roles', [UserController::class, 'getRoles']);
 Route::get('/get-education-levels', [UserController::class, 'getEducationLevels']);
+
+
 
