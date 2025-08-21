@@ -290,6 +290,8 @@ class ResumeController extends Controller
 
          $output = shell_exec($command);
 
+         dd($output);
+
          // Ensure clean UTF-8 output
          $output = trim($output);
          $cleanOutput = mb_convert_encoding($output, 'UTF-8', 'UTF-8');
