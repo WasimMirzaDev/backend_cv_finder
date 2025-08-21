@@ -12,7 +12,7 @@ class JobController extends Controller
     {
         try {
             $response = Http::withHeaders([
-                'X-API-KEY' => env('SERPER_API_TOKEN'), // Consider moving this to .env
+                'X-API-KEY' => '005f8ef3c4798d43c893c97f43a75cbafba428d4', // Consider moving this to .env
                 'Content-Type' => 'application/json',
             ])->post('https://google.serper.dev/search', [
                 'q' => $request->input('q', 'software developer'), // Default query
@@ -20,6 +20,8 @@ class JobController extends Controller
                 'gl' => $request->input('gl', 'us'),
                 'num' => $request->input('num', 10),
             ]);
+
+
 
             if ($response->successful()) {
                 return $response->json();
