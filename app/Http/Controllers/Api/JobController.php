@@ -11,14 +11,20 @@ class JobController extends Controller
     public function fetchJobs(Request $request)
     {
         try {
+            $query = $request->input('q', 'software developer job');
+            if ($request->has('location')) {
+                $query .= ' in ' . $request->input('location');
+            }
+
             $response = Http::withHeaders([
-                'X-API-KEY' => '005f8ef3c4798d43c893c97f43a75cbafba428d4', // Consider moving this to .env
-                'Content-Type' => 'application/json',
-            ])->post('https://google.serper.dev/search', [
-                'q' => $request->input('q', 'software developer job'), // Default query
-                'location' => $request->input('location'),
-                'gl' => $request->input('gl', 'us'),
-                'num' => $request->input('num', 10),
+                'x-rapidapi-host' => 'jsearch.p.rapidapi.com',
+                'x-rapidapi-key' => 'a007b488d3msh5fe56b4d9e822b1p1fb2bcjsnf9de8d4ed9ee', // TODO: Move to .env
+            ])->get('https://jsearch.p.rapidapi.com/search', [
+                'query' => $query,
+                'page' => $request->input('page', 1),
+                'num_pages' => $request->input('num_pages', 1),
+                'country' => $request->input('gl', 'us'), // Mapped from 'gl'
+                'date_posted' => $request->input('date_posted', 'all'),
             ]);
 
 
