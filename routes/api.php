@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InterviewController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CvRecentActivityController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\PlanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,8 @@ Route::get('/questions/{questionId}', [QuestionController::class, 'getQuestion']
 Route::get('/get-industries', [UserController::class, 'getIndustries']);
 Route::get('/get-roles', [UserController::class, 'getRoles']);
 Route::get('/get-education-levels', [UserController::class, 'getEducationLevels']);
+
+Route::apiResource('plans', PlanController::class);
 
 
 
