@@ -14,22 +14,39 @@ class SubscriptionController extends Controller
      */
     public function createOrder(Request $request)
     {
-        $response = Http::withToken(config('services.revolut_merchant.secret'))
+        if($request->customer_id){
+            $response = Http::withToken(config('services.revolut_merchant.secret'))
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'Revolut-Api-Version' => '2023-09-01',
             ])
-            ->post(config('services.revolut_merchant.base') . '/api/1.0/orders', [
+            ->post(config('services.revolut_merchant.base') . '/api/orders', [
                 "amount" => (int) $request->amount, // in cents
                 "currency" => "USD",
-                "capture_mode" => "AUTOMATIC",
-                "merchant_order_ext_ref" => Str::uuid()->toString(),
+                "description" => "Subscription Order",
+                "save_payment_method_for" => "merchant",
+                "customer" => [
+                    "id" => $request->customer_id,
+                    "email" => $request->email,
+                ],
+            ]);
+        }
+        else{
+            $response = Http::withToken(config('services.revolut_merchant.secret'))
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Revolut-Api-Version' => '2023-09-01',
+            ])
+            ->post(config('services.revolut_merchant.base') . '/api/orders', [
+                "amount" => (int) $request->amount, // in cents
+                "currency" => "USD",
                 "description" => "Subscription Order",
                 "save_payment_method_for" => "merchant",
                 "customer" => [
                     "email" => $request->email,
                 ],
             ]);
+        }
     
         return response()->json($response->json());
     }
@@ -57,7 +74,7 @@ class SubscriptionController extends Controller
         $paymentMethodId = $request->payment_method_id;
 
         $response = Http::withToken(config('services.revolut_merchant.secret'))
-            ->post(config('services.revolut_merchant.base') . '/api/1.0/order/' . $orderId . '/pay', [
+            ->post(config('services.revolut_merchant.base') . '/api/orders/' . $orderId . '/pay', [
                 "saved_payment_method" => [
                     "type" => "revolut_pay",
                     "id"   => $paymentMethodId,
