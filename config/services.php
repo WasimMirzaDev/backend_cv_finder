@@ -24,6 +24,17 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
     ],
+    'revolut' => [
+    'key'     => env('REVOLUT_KEY'),   // Your Revolut API access token
+    'sandbox' => env('REVOLUT_SANDBOX', true), // true for sandbox, false for live
+],
+'revolut_merchant' => [
+    'secret' => env('REVOLUT_MERCHANT_SECRET_KEY'),
+    'public' => env('REVOLUT_MERCHANT_PUBLIC_KEY'),
+    'base'   => env('REVOLUT_API_BASE', 'https://sandbox-merchant.revolut.com'),
+],
+
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

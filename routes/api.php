@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\PlanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\RevolutController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 /*
  * |--------------------------------------------------------------------------
@@ -84,3 +86,11 @@ Route::apiResource('plans', PlanController::class);
 
 
 
+Route::get('/revolut/accounts', [RevolutController::class, 'accounts']);
+Route::post('/revolut/payout-link', [RevolutController::class, 'createPayoutLink']);
+
+
+Route::post('/subscription/create-order', [SubscriptionController::class, 'createOrder']);
+Route::post('/subscription/get-payments', [SubscriptionController::class, 'getPaymentsForOrder']);
+Route::post('/subscription/charge', [SubscriptionController::class, 'chargeSavedMethod']);
+Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
