@@ -24,7 +24,7 @@ class JobController extends Controller
                 'page' => $request->input('page', 2),
                 'num_pages' => $request->input('num_pages', 1),
                 'country' => $request->input('gl', 'us'), // Mapped from 'gl'
-                'date_posted' => $request->input('date_posted', '3days'),
+                'date_posted' => $request->input('date_posted', 'week'),
             ]);
 
 
