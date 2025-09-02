@@ -35,8 +35,8 @@ class StripeController extends Controller
                 ],
             ],
             'customer_email' => Auth::user()->email ?? '',
-            'success_url' => config('app.url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => config('app.url') . '/payment-cancelled',
+            'success_url' => env('APP_URL') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => env('APP_URL') . '/payment-cancelled',
         ]);
 
         return response()->json([
