@@ -41,7 +41,6 @@ class StripeWebhookController extends Controller
                     
                     $price_id = $invoice->lines->data[0]->pricing->price_details->price;
                     
-                    return $price_id;
 
                     $plan = Plan::where('stripe_price_id', $price_id)->first();
 
@@ -55,6 +54,8 @@ class StripeWebhookController extends Controller
                         'payment_status' => $invoice->status,
                         'payment_currency' => strtoupper($invoice->currency), // Ensure uppercase currency code
                     ]);
+
+                    break;
 
 
                 case 'customer.subscription.created' :
