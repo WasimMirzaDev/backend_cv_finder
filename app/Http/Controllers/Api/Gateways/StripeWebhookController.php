@@ -51,10 +51,12 @@ class StripeWebhookController extends Controller
                 $plan = $subscriptionItem->plan;
                 $price = $subscriptionItem->price;
                 
+                $plan = Plan::where('stripe_price_id', $plan->id)->first();
+
                 $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
-                    'related_type_id' => 1,
+                    'related_type_id' => $plan->id,
                     'payment_amount' => $price->unit_amount / 100,  // Convert from cents to dollars
                     'payment_transaction_id' => $subscription->latest_invoice,
                     'payment_gateway' => 'stripe',
@@ -95,7 +97,7 @@ class StripeWebhookController extends Controller
                 ]);
     
     
-                    $user->plan_id = 1;
+                    $user->plan_id = $plan->id;
                     $user->save();
                     \DB::commit();
     
@@ -123,11 +125,13 @@ class StripeWebhookController extends Controller
                 $subscriptionItem = $subscription->items->data[0];
                 $plan = $subscriptionItem->plan;
                 $price = $subscriptionItem->price;
+
+                $plan = Plan::where('stripe_price_id', $plan->id)->first();
                 
                 $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
-                    'related_type_id' => 1,
+                    'related_type_id' => $plan->id,
                     'payment_amount' => $price->unit_amount / 100,  // Convert from cents to dollars
                     'payment_transaction_id' => $subscription->latest_invoice,
                     'payment_gateway' => 'stripe',
@@ -165,7 +169,7 @@ class StripeWebhookController extends Controller
                 ]);
     
     
-                    $user->plan_id = 1;
+                    $user->plan_id = $plan->id;
                     $user->save();
                     \DB::commit();
                     
