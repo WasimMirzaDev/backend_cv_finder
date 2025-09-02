@@ -81,6 +81,11 @@ class StripeWebhookController extends Controller
                 
                 $plan = Plan::where('stripe_price_id', $price->id)->first();
 
+
+                $invoice = \Stripe\Invoice::retrieve($subscription->latest_invoice);
+
+                return $invoice;
+
                 $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
