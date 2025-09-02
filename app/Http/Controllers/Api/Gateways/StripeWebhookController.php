@@ -116,7 +116,7 @@ class StripeWebhookController extends Controller
                 
                 
                 Subscription::create([
-                    'name' => 'VIP MEMBERSHIP',
+                    'name' => $plan->title,
                     'user_id' => $user->id,
                     'type' => 'membership',
                     'type_id' => $plan->id,
@@ -158,6 +158,8 @@ class StripeWebhookController extends Controller
                 $price = $subscriptionItem->price;
 
                 $plan = Plan::where('stripe_price_id', $price->id)->first();
+
+                $invoice = \Stripe\Invoice::retrieve($subscription->latest_invoice);
                 
                 $payment = Payment::create([
                     'user_id' => $user->id,
@@ -166,7 +168,7 @@ class StripeWebhookController extends Controller
                     'payment_amount' => $price->unit_amount / 100,  // Convert from cents to dollars
                     'payment_transaction_id' => $subscription->latest_invoice,
                     'payment_gateway' => 'stripe',
-                    'payment_status' => $subscription->status,
+                    'payment_status' => $invoice->status,
                     'payment_currency' => strtoupper($price->currency), // Ensure uppercase currency code
                 ]);
                 
@@ -188,7 +190,7 @@ class StripeWebhookController extends Controller
                 
                 
                 Subscription::create([
-                    'name' => 'VIP MEMBERSHIP',
+                    'name' => $plan->title,
                     'user_id' => $user->id,
                     'type' => 'membership',
                     'type_id' => $plan->id,
