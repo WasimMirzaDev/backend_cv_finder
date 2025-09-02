@@ -84,8 +84,6 @@ class StripeWebhookController extends Controller
 
                 $invoice = \Stripe\Invoice::retrieve($subscription->latest_invoice);
 
-                return $invoice;
-
                 $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
@@ -93,7 +91,7 @@ class StripeWebhookController extends Controller
                     'payment_amount' => $price->unit_amount / 100,  // Convert from cents to dollars
                     'payment_transaction_id' => $subscription->latest_invoice,
                     'payment_gateway' => 'stripe',
-                    'payment_status' => $subscription->status,
+                    'payment_status' => $invoice->status,
                     'payment_currency' => strtoupper($price->currency), // Ensure uppercase currency code
                 ]);
                 
