@@ -34,14 +34,14 @@ class StripeWebhookController extends Controller
                 case 'invoice.payment_succeeded' :
                     $invoice = $event->data->object;
 
-                    return "OOOOOW";
-
+                    
                     $email = $invoice->customer_email;
-
+                    
                     $user = User::where('email', $email)->first();
-
-                    $price_id = $invoice->lines->data[0]->price->pricing->price_details->price;
-
+                    
+                    $price_id = $invoice->lines->data[0]->pricing->price_details->price;
+                    
+                    return $price_id;
 
                     $plan = Plan::where('stripe_price_id', $price_id)->first();
 
