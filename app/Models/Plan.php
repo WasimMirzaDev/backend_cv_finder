@@ -20,6 +20,7 @@ class Plan extends Model
         'price',
         'interval',
         'features',
+        'stripe_price_id',
     ];
 
     /**

@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RevolutController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\Gateways\StripeWebhookController;
+use App\Http\Controllers\Api\Gateways\StripeController;
 
 /*
  * |--------------------------------------------------------------------------
@@ -44,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/recent-activities', [CvRecentActivityController::class, 'index']);
 
     Route::get('/fetch-jobs', [JobController::class, 'fetchJobs']);
+
+
+    Route::post('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -94,3 +99,7 @@ Route::post('/subscription/create-order', [SubscriptionController::class, 'creat
 Route::post('/subscription/get-payments', [SubscriptionController::class, 'getPaymentsForOrder']);
 Route::post('/subscription/charge', [SubscriptionController::class, 'chargeSavedMethod']);
 Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
+
+
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
