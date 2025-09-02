@@ -13,7 +13,6 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
-        Plan::truncate(); // Clears the table to avoid duplicates on re-seed
 
         Plan::create([
             'title' => 'Weekly Plan',

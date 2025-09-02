@@ -4,6 +4,13 @@ namespace App\Http\Controllers\Api\Gateways;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use App\Models\Subscription;
+use App\Models\Payment;
+use App\Models\Plan;
 
 class StripeWebhookController extends Controller
 {
@@ -20,7 +27,7 @@ class StripeWebhookController extends Controller
             return response()->json(['error' => 'Invalid signature'], 400);
         }
 
-        
+
         try {
             switch ($event->type) {
                 case 'customer.subscription.created' :
@@ -44,7 +51,7 @@ class StripeWebhookController extends Controller
                 $plan = $subscriptionItem->plan;
                 $price = $subscriptionItem->price;
                 
-                $payment = \App\Models\Payment::create([
+                $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
                     'related_type_id' => 1,
@@ -117,7 +124,7 @@ class StripeWebhookController extends Controller
                 $plan = $subscriptionItem->plan;
                 $price = $subscriptionItem->price;
                 
-                $payment = \App\Models\Payment::create([
+                $payment = Payment::create([
                     'user_id' => $user->id,
                     'related_type' => 'membership',
                     'related_type_id' => 1,
@@ -197,7 +204,7 @@ class StripeWebhookController extends Controller
                             return response()->json(['error' => 'Email not found'], 404);
                         }
                     
-                        $user = \App\Models\User::where('email', $customer_email)->first();
+                        $user = User::where('email', $customer_email)->first();
                         if (!$user) {
                             Log::warning("Stripe webhook: User not found with email {$customer_email}");
                             return response()->json(['error' => 'User not found'], 404);
