@@ -31,31 +31,31 @@ class StripeWebhookController extends Controller
         try {
             switch ($event->type) {
 
-                case 'invoice.payment_succeeded' :
-                    $invoice = $event->data->object;
+                // case 'invoice.payment_succeeded' :
+                //     $invoice = $event->data->object;
 
                     
-                    $email = $invoice->customer_email;
+                //     $email = $invoice->customer_email;
                     
-                    $user = User::where('email', $email)->first();
+                //     $user = User::where('email', $email)->first();
                     
-                    $price_id = $invoice->lines->data[0]->pricing->price_details->price;
+                //     $price_id = $invoice->lines->data[0]->pricing->price_details->price;
                     
 
-                    $plan = Plan::where('stripe_price_id', $price_id)->first();
+                //     $plan = Plan::where('stripe_price_id', $price_id)->first();
 
-                    $payment = Payment::create([
-                        'user_id' => $user->id,
-                        'related_type' => 'membership',
-                        'related_type_id' => $plan->id,
-                        'payment_amount' => $invoice->total / 100,  // Convert from cents to dollars
-                        'payment_transaction_id' => $invoice->id,
-                        'payment_gateway' => 'stripe',
-                        'payment_status' => $invoice->status,
-                        'payment_currency' => strtoupper($invoice->currency), // Ensure uppercase currency code
-                    ]);
+                //     $payment = Payment::create([
+                //         'user_id' => $user->id,
+                //         'related_type' => 'membership',
+                //         'related_type_id' => $plan->id,
+                //         'payment_amount' => $invoice->total / 100,  // Convert from cents to dollars
+                //         'payment_transaction_id' => $invoice->id,
+                //         'payment_gateway' => 'stripe',
+                //         'payment_status' => $invoice->status,
+                //         'payment_currency' => strtoupper($invoice->currency), // Ensure uppercase currency code
+                //     ]);
 
-                    break;
+                //     break;
 
 
                 case 'customer.subscription.created' :
