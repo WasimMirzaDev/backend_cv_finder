@@ -35,8 +35,8 @@ class StripeController extends Controller
                 ],
             ],
             'customer_email' => Auth::user()->email ?? '',
-            'success_url' => env('APP_URL') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => env('APP_URL') . '/payment-cancelled',
+            'success_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-cancelled',
         ]);
 
         return response()->json([
