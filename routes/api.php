@@ -48,7 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/fetch-jobs', [JobController::class, 'fetchJobs']);
 
 
-    Route::post('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
+    Route::get('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);
