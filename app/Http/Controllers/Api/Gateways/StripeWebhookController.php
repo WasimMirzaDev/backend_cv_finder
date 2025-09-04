@@ -124,6 +124,7 @@ class StripeWebhookController extends Controller
                     'trial_ends_at' => $trialEndsAt,
                     'ends_at' => $subscriptionEndsAt,
                     'starts_at' => $subscriptionStartsAt,
+                    'sub_id' => $subscription->id,
                     'status' => $subscription->status
                 ]);
     
@@ -198,6 +199,7 @@ class StripeWebhookController extends Controller
                     'trial_ends_at' => $trialEndsAt,
                     'ends_at' => $subscriptionEndsAt,
                     'starts_at' => $subscriptionStartsAt,
+                    'sub_id' => $subscription->id,
                     'status' => $subscription->status
                 ]);
     
@@ -249,7 +251,7 @@ class StripeWebhookController extends Controller
                     
                         // Mark subscription as cancelled in your DB
                         $localSubscription = Subscription::where('user_id', $user->id)
-                            ->where('type_id', $session->id)
+                            ->where('sub_id', $session->id)
                             ->latest()
                             ->first();
     
