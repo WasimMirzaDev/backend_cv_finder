@@ -30,13 +30,13 @@ class StripeController extends Controller
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
         try {
-            // $subscriptionStripe = \Stripe\Subscription::retrieve([
-            //     'id' => $subscription->type_id,
-            //     'expand' => []
-            // ]);
+            $subscriptionStripe = \Stripe\Subscription::retrieve([
+                'id' => $subscription->sub_id,
+                'expand' => []
+            ]);
 
             return response()->json([
-                'subscription' => $subscription,
+                'subscription' => $subscriptionStripe,
                 'user' => $user,
             ]);
         } catch (\Exception $e) {
