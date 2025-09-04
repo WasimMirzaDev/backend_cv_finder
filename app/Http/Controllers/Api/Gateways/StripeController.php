@@ -91,7 +91,7 @@ class StripeController extends Controller
         ->latest()
         ->first();
 
-    if (!$subscription || !$subscription->type_id) {
+    if (!$subscription || !$subscription->sub_id) {
         return response()->json(['message' => 'Active subscription not found.'], 404);
     }
 
@@ -100,12 +100,12 @@ class StripeController extends Controller
     try {
         // Cancel at period end
         \Stripe\Subscription::update(
-            $subscription->type_id,
+            $subscription->sub_id,
             ['cancel_at_period_end' => true]
         );
 
            $subscriptionStripe =  \Stripe\Subscription::retrieve([
-                'id' => $subscription->type_id,
+                'id' => $subscription->sub_id,
                 'expand' => []
             ]);
 
