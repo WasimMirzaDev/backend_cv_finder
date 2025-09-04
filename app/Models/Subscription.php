@@ -21,6 +21,7 @@ class Subscription extends Model
         'type',
         'type_id',
         'sub_id',
+        'cus_id',
         'status',
         'trial_ends_at',
         'ends_at',
@@ -37,6 +38,7 @@ class Subscription extends Model
         'ends_at' => 'datetime',
         'starts_at' => 'datetime',
         'sub_id' => 'string',
+        'cus_id' => 'string',
         'status' => 'string'
     ];
 
