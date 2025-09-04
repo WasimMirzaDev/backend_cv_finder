@@ -123,4 +123,32 @@ class StripeController extends Controller
         ], 500);
     }
 }
+
+    public function getPaymentMethod(Request $request)
+    {
+        $user = Auth::user();
+
+        $subscription = Subscription::where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        if (!$subscription || !$subscription->cus_id) {
+            return response()->json(['message' => 'Active subscription not found.'], 404);
+        }
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        try {
+            $paymentMethods = \Stripe\PaymentMethod::all([
+                'customer' => $subscription->cus_id,
+                'type' => 'card',
+            ]);            
+            return response()->json($paymentMethods);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve payment method.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

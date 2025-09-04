@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
     Route::get('/subscription/details', [StripeController::class, 'getSubscriptionDetails']);
     Route::post('/subscription/cancel', [StripeController::class, 'cancelSubscription']);
+    Route::get('/subscription/payment-method', [StripeController::class, 'getPaymentMethod']);
 });
 
 
