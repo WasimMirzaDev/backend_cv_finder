@@ -185,7 +185,7 @@ class StripeController extends Controller
     ]);
    }
 
-   public function addPaymentMethod(Request $request, $customerId)
+   public function makeDefaultPaymentMethod(Request $request, $customerId)
    {
 
     \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -196,6 +196,6 @@ class StripeController extends Controller
         ],
     ]);   
 
-    return response()->json(['message' => 'Payment method added successfully.']);
+    return response()->json(['message' => 'Payment method updated successfully.']);
     }
 }
