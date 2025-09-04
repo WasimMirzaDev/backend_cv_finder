@@ -90,4 +90,8 @@ class Subscription extends Model
     {
         return $this->belongsTo(Payment::class);
     }
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class , 'type_id', 'id');
+    }
 }
