@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-profile', [UserController::class, 'uploadProfile']);
@@ -49,10 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
+    Route::get('/subscription/details', [StripeController::class, 'getSubscriptionDetails']);
+    Route::post('/subscription/cancel', [StripeController::class, 'cancelSubscription']);
 });
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
 
 // Example API route
 Route::get('/test', function () {
@@ -89,17 +91,12 @@ Route::get('/get-education-levels', [UserController::class, 'getEducationLevels'
 
 Route::apiResource('plans', PlanController::class);
 
-
-
 Route::get('/revolut/accounts', [RevolutController::class, 'accounts']);
 Route::post('/revolut/payout-link', [RevolutController::class, 'createPayoutLink']);
-
 
 Route::post('/subscription/create-order', [SubscriptionController::class, 'createOrder']);
 Route::post('/subscription/get-payments', [SubscriptionController::class, 'getPaymentsForOrder']);
 Route::post('/subscription/charge', [SubscriptionController::class, 'chargeSavedMethod']);
 Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
-
-
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);

@@ -8,9 +8,46 @@ use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Plan;
+use App\Models\Subscription;
 
 class StripeController extends Controller
 {
+
+
+
+    public function getSubscriptionDetails(Request $request)
+    {
+        $user = Auth::user();
+
+        $subscription = Subscription::where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        if (!$subscription || !$subscription->type_id) {
+            return response()->json(['message' => 'Active subscription not found.'], 404);
+        }
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        try {
+            $subscriptionStripe = \Stripe\Subscription::retrieve([
+                'id' => $subscription->type_id,
+                'expand' => []
+            ]);
+
+            return response()->json([
+                'subscription' => $subscriptionStripe,
+                'user' => $user,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve subscription details.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function createSubscriptionSession(Request $request, $planId)
     {
         $plan = Plan::find($planId);
