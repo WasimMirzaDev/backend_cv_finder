@@ -151,4 +151,51 @@ class StripeController extends Controller
             ], 500);
         }
     }
+
+    public function deletePaymentMethod(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        try {
+            $paymentMethod = \Stripe\PaymentMethod::retrieve($id);
+            $paymentMethod->detach();
+
+            return response()->json(['message' => 'Payment method deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete payment method.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function createSetupIntent($customerId)
+    {
+    \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+    $intent = \Stripe\SetupIntent::create([
+        'customer' => $customerId,
+        'payment_method_types' => ['card'],
+    ]);
+
+    return response()->json([
+        'clientSecret' => $intent->client_secret,
+    ]);
+   }
+
+   public function addPaymentMethod(Request $request, $customerId)
+   {
+
+    \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+    \Stripe\Customer::update($customerId, [
+        'invoice_settings' => [
+            'default_payment_method' => $request->payment_method_id,
+        ],
+    ]);   
+
+    return response()->json(['message' => 'Payment method added successfully.']);
+    }
 }

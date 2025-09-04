@@ -54,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/details', [StripeController::class, 'getSubscriptionDetails']);
     Route::post('/subscription/cancel', [StripeController::class, 'cancelSubscription']);
     Route::get('/subscription/payment-method', [StripeController::class, 'getPaymentMethod']);
+    Route::delete('/subscription/payment-method/{id}', [StripeController::class, 'deletePaymentMethod']);
+    Route::get('/subscription/payment-method-intent/{customerId}', [StripeController::class, 'createSetupIntent']);
+    Route::post('/subscription/payment-method-add/{customerId}', [StripeController::class, 'addPaymentMethod']);
 });
 
 
