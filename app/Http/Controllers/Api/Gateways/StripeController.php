@@ -138,11 +138,20 @@ class StripeController extends Controller
 
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
+        
         try {
+            $customer = \Stripe\Customer::retrieve($subscription->cus_id);
+            
+            // Get default payment method ID
+            $defaultPaymentMethodId = $customer->invoice_settings->default_payment_method;
             $paymentMethods = \Stripe\PaymentMethod::all([
                 'customer' => $subscription->cus_id,
                 'type' => 'card',
             ]);            
+            foreach ($paymentMethods->data as $pm) {
+                $isDefault = ($pm->id === $defaultPaymentMethodId);
+                $pm->default = $isDefault;
+            }
             return response()->json($paymentMethods);
         } catch (\Exception $e) {
             return response()->json([
