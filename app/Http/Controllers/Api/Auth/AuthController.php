@@ -13,9 +13,9 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name' => 'required|string|max:100|min:3',
+            'email' => 'required|string|email|max:100|unique:users',
+            'password' => 'required|string|min:8|max:18|confirmed',
         ]);
 
         $user = User::create([
@@ -38,8 +38,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string|min:8',
+            'email' => 'required|string|email|max:100',
+            'password' => 'required|string|min:8|max:18',
         ]);
 
         if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
