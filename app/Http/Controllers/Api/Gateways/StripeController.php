@@ -145,7 +145,7 @@ class StripeController extends Controller
             // Get default payment method ID
             $defaultPaymentMethodId = $customer->invoice_settings->default_payment_method;
 
-            return $defaultPaymentMethodId;
+            // return $defaultPaymentMethodId;
             $paymentMethods = \Stripe\PaymentMethod::all([
                 'customer' => $subscription->cus_id,
                 'type' => 'card',
