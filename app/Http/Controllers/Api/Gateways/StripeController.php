@@ -144,12 +144,14 @@ class StripeController extends Controller
             
             // Get default payment method ID
             $defaultPaymentMethodId = $customer->invoice_settings->default_payment_method;
+
+            return $defaultPaymentMethodId;
             $paymentMethods = \Stripe\PaymentMethod::all([
                 'customer' => $subscription->cus_id,
                 'type' => 'card',
             ]);            
             foreach ($paymentMethods->data as $pm) {
-                $isDefault = ($pm->id === $defaultPaymentMethodId);
+                $isDefault = ($pm->id == $defaultPaymentMethodId);
                 $pm->default = $isDefault;
             }
             return response()->json($paymentMethods);
