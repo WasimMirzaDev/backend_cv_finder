@@ -57,30 +57,62 @@ class StripeController extends Controller
                 'error' => 'Plan not found',
             ], 404);
         }
+
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
-        $session = Session::create([
-            'payment_method_types' => ['card'],
-            'mode' => 'subscription',
-            'line_items' => [[
-                'price' => $plan->stripe_price_id,
-                'quantity' => 1,
-            ]],
-            'subscription_data' => [
-                'metadata' => [
-                    'type' => 'subscription',
-                    'user_id' => Auth::id() ?? null,
+        if($request->isFreeTrial){
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'mode' => 'subscription',
+                'line_items' => [[
+                    'price' => $plan->stripe_price_id,
+                    'quantity' => 1,
+                ]],
+                'subscription_data' => [
+                    'trial_period_days' => 7,
+                    'metadata' => [
+                        'type' => 'subscription',
+                        'user_id' => Auth::id() ?? null,
+                    ],
                 ],
-            ],
-            'customer_email' => Auth::user()->email ?? '',
-            'success_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-cancelled',
-        ]);
+                'customer_email' => Auth::user()->email ?? '',
+                'success_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-cancelled',
+            ]);
+    
+            return response()->json([
+                'sessionId' => $session->id,
+                'checkoutUrl' => $session->url,
+            ]);
+        }
+        else{
 
-        return response()->json([
-            'sessionId' => $session->id,
-            'checkoutUrl' => $session->url,
-        ]);
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'mode' => 'subscription',
+                'line_items' => [[
+                    'price' => $plan->stripe_price_id,
+                    'quantity' => 1,
+                ]],
+                'subscription_data' => [
+                    'metadata' => [
+                        'type' => 'subscription',
+                        'user_id' => Auth::id() ?? null,
+                    ],
+                ],
+                'customer_email' => Auth::user()->email ?? '',
+                'success_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => 'https://lightgreen-duck-722360.hostingersite.com/payment-cancelled',
+            ]);
+    
+            return response()->json([
+                'sessionId' => $session->id,
+                'checkoutUrl' => $session->url,
+            ]);
+        }
+
+
+       
     }
 
     public function cancelSubscription(Request $request)
