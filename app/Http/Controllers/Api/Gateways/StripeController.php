@@ -241,4 +241,29 @@ class StripeController extends Controller
 
     return response()->json(['message' => 'Payment method updated successfully.']);
     }
+
+    public function changePlan(Request $request, $newPriceId)
+    {
+        $user = Auth::user();
+        $subscription = Subscription::where('user_id', $user->id)
+            ->latest()
+            ->first();
+        
+        $subscriptionId = $subscription->sub_id;
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+        // Retrieve the current subscription
+        $subscription = \Stripe\Subscription::retrieve($subscriptionId);
+    
+        // Update the subscription with new plan
+        $updated = \Stripe\Subscription::update($subscriptionId, [
+            'items' => [[
+                'id' => $subscription->items->data[0]->id, // keep same item
+                'price' => $newPriceId, // new plan price ID
+            ]],
+            'proration_behavior' => 'create_prorations', // immediate adjustment
+        ]);
+    
+        return $updated;
+    }
 }
