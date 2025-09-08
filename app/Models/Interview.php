@@ -54,6 +54,21 @@ class Interview extends Model
 
     public function getStatusAttribute()
     {
-        return $this->evaluation['breakdown']['total']['score'] > 70 ? 'PASS' : ($this->evaluation['breakdown']['total']['score'] > 40 ? 'NEEDS IMPROVEMENT' : 'FAIL');
+        if (!is_array($this->evaluation) || 
+            !isset($this->evaluation['breakdown']) || 
+            !is_array($this->evaluation['breakdown']) ||
+            !isset($this->evaluation['breakdown']['total']) ||
+            !is_array($this->evaluation['breakdown']['total']) ||
+            !isset($this->evaluation['breakdown']['total']['score'])) {
+            return 'UNKNOWN';
+        }
+
+        $score = $this->evaluation['breakdown']['total']['score'];
+        
+        if ($score > 70) {
+            return 'PASS';
+        }
+        
+        return $score > 40 ? 'NEEDS IMPROVEMENT' : 'FAIL';
     }
 }
