@@ -242,12 +242,24 @@ class StripeController extends Controller
     return response()->json(['message' => 'Payment method updated successfully.']);
     }
 
-    public function changePlan(Request $request, $newPriceId)
+    public function changePlan(Request $request, $planId)
     {
+        $plan = Plan::find($planId);
+        if(!$plan){
+            return response()->json([
+                'message' => 'Plan not found',
+            ], 404);
+        }
         $user = Auth::user();
         $subscription = Subscription::where('user_id', $user->id)
             ->latest()
             ->first();
+            
+        if(!$subscription){
+            return response()->json([
+                'message' => 'Subscription not found',
+            ], 404);
+        }
         
         $subscriptionId = $subscription->sub_id;
 
@@ -259,7 +271,7 @@ class StripeController extends Controller
         $updated = \Stripe\Subscription::update($subscriptionId, [
             'items' => [[
                 'id' => $subscription->items->data[0]->id, // keep same item
-                'price' => $newPriceId, // new plan price ID
+                'price' => $plan->stripe_price_id, // new plan price ID
             ]],
             'proration_behavior' => 'create_prorations', // immediate adjustment
         ]);

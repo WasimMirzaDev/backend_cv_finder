@@ -57,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/subscription/payment-method/{id}', [StripeController::class, 'deletePaymentMethod']);
     Route::get('/subscription/payment-method-intent/{customerId}', [StripeController::class, 'createSetupIntent']);
     Route::post('/subscription/payment-method-default/{customerId}', [StripeController::class, 'makeDefaultPaymentMethod']);
-    Route::post('/subscription/change-plan/{newPriceId}', [StripeController::class, 'changePlan']);
+    Route::post('/subscription/change-plan/{planId}', [StripeController::class, 'changePlan']);
 });
 
 
