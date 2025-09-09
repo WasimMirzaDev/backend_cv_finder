@@ -24,14 +24,7 @@ class GPT4oMiniController extends Controller
         $apiKey = config('services.openai.api_key');
 
         $prompt = <<<EOT
-            You are a professional CV writer who adapts to the candidate’s local language and grammar based on the user input. 
-            Ensure the CV is:
-            1. Written in a clear, natural, human tone;
-            2. Applicant Tracking System (ATS) optimised (no tables or graphics);
-            3. Aligned with the tone and keywords from the user input and job description if available;
-            4. Written using the local spelling, grammar, date formats, and job titles inferred from the candidate’s input (e.g., UK vs US English).
-
-            Using the user data provided below, respond ONLY with a complete JSON structure matching the following format. Your response must start with `{` and must contain all keys from the sample, even if the values are null. Do not explain anything. Do not include markdown or code blocks.and use you AI skills to implement data from description to other keys and try to fill most of values if it is reasonable and modify data if it is not reasonable and write summary based on description.
+            Create a professional, ATS-optimized CV in JSON format using the provided user details. Ensure it's written in a clear, natural tone with proper localization. Include all required fields, even if null. Generate relevant content from the description when possible. Return only valid JSON without any explanations or markdown.
 
             User data:
             First Name: {$request->firstName}
@@ -191,7 +184,8 @@ class GPT4oMiniController extends Controller
                     ]
                 ],
                 'temperature' => 0.0,
-                'max_tokens' => 2048,
+                'response_format' => ['type' => 'json_object'], // Ensure JSON output
+                'max_tokens' => 2048 , // Allow for detailed evaluation
             ]);
 
             $content = $response->json();
