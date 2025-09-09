@@ -480,7 +480,7 @@ PROMPT;
                 ],
                 'temperature' => 0.0, // Minimize randomness
                 'response_format' => ['type' => 'json_object'], // Ensure JSON output
-                'max_tokens' => 2048, // Allow for detailed evaluation
+                'max_tokens' => 5000, // Allow for detailed evaluation
             ]);
 
         
