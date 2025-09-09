@@ -67,7 +67,11 @@ class ResumeController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $resume = CvResume::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'data' => $resume
+        ]);
     }
 
     /**
