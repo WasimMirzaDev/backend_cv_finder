@@ -271,7 +271,7 @@ class ResumeController extends Controller
     public function parseResumeOCRPyScript(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:pdf,png,jpg,jpeg,docx|max:20480'
+            'file' => 'required|mimes:pdf,png,jpg,jpeg,docx'
         ]);
         $model = $request->model ?? 'gpt-4o-mini';
         $file = $request->file('file');
