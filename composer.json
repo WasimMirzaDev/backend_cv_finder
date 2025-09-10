@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "phpoffice/phpword": "^1.4",
         "smalot/pdfparser": "^2.12",
         "stripe/stripe-php": "^17.6",
         "sverraest/revolut-php": "^1.3",

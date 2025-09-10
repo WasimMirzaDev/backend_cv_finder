@@ -268,42 +268,52 @@ class ResumeController extends Controller
     }
 
 
-     public function parseResumeOCRPyScript(Request $request)
-     {
-         $request->validate([
-             'file' => 'required|mimes:pdf,png,jpg,jpeg|max:20480'
-         ]);
-         $model = $request->model ?? 'gpt-4o-mini';
-         $file = $request->file('file');
-         $path = storage_path('app/temp/' . $file->getClientOriginalName());
-         $file->move(storage_path('app/temp'), $file->getClientOriginalName());
-         $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
-         $scriptPath = public_path('scripts/parse_resume.py');
-        //  $command = escapeshellcmd("/var/www/html/backend_cv_finder/env/bin/python scripts/parse_resume.py \"$path\"");
-         $command = sprintf(
-          '%s %s "%s"',
-          escapeshellarg($pythonPath),
-          escapeshellarg($scriptPath),
-          str_replace('"', '\"', $path)
-      );
-         $output = [];
-         $returnVar = 0;
-         exec($command . ' 2>&1', $output, $returnVar);
-         $output = implode("\n", $output);
+    public function parseResumeOCRPyScript(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:pdf,png,jpg,jpeg,docx|max:20480'
+        ]);
+        $model = $request->model ?? 'gpt-4o-mini';
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $extension = strtolower($file->getClientOriginalExtension());
+        $path = storage_path('app/temp/' . $originalName);
+        $file->move(storage_path('app/temp'), $originalName);
 
+        $cleanOutput = '';
 
-         $output = shell_exec($command);
+        if ($extension == 'docx') {
+            // Handle DOCX files using PhpOffice\PhpWord
+            try {
+                $phpWord = \PhpOffice\PhpWord\IOFactory::load($path);
+                $text = '';
+                foreach ($phpWord->getSections() as $section) {
+                    foreach ($section->getElements() as $element) {
+                        if (method_exists($element, 'getText')) {
+                            $text .= $element->getText() . "\n";
+                        }
+                    }
+                }
+                $cleanOutput = mb_convert_encoding(trim($text), 'UTF-8', 'UTF-8');
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Failed to parse DOCX file', 'details' => $e->getMessage()], 500);
+            }
+        } else {
+            // Handle PDF and images with Python script
+            $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
+            $scriptPath = public_path('scripts/parse_resume.py');
+            $command = sprintf(
+                '%s %s "%s"',
+                escapeshellarg($pythonPath),
+                escapeshellarg($scriptPath),
+                str_replace('"', '\"', $path)
+            );
 
-        //   dd($output);
+            $output = shell_exec($command . ' 2>&1');
+            $cleanOutput = mb_convert_encoding(trim($output), 'UTF-8', 'UTF-8');
+        }
 
-         // Ensure clean UTF-8 output
-         $output = trim($output);
-         $cleanOutput = mb_convert_encoding($output, 'UTF-8', 'UTF-8');
-     
-         $decoded = json_decode($cleanOutput, true);
-         
-
-         try {
+        try {
             $apiKey = config('services.openai.api_key');
         
             // Construct detailed evaluation prompt based on the framework
@@ -481,6 +491,16 @@ class ResumeController extends Controller
                     $decoded = json_decode($jsonString, true);
 
                     if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+                        $pdfParsed = new PdfParsed();
+                        $pdfParsed->ip_address = $request->ip();
+                        $pdfParsed->user_agent = $request->userAgent();
+                        if (isset($decoded['data']['candidateName'][0]['firstName'], $decoded['data']['candidateName'][0]['familyName'])) {
+                            $pdfParsed->full_name = $decoded['data']['candidateName'][0]['firstName'] . ' ' . $decoded['data']['candidateName'][0]['familyName'];
+                        }
+                        $pdfParsed->file_name = $originalName;
+                        $pdfParsed->parsed_data = $decoded;
+                        $pdfParsed->save();
+
                         return response()->json($decoded);
                     }
 
@@ -496,34 +516,14 @@ class ResumeController extends Controller
                 ], 500);
             }
 
-            // return $parsedData;
-
-            if ($gptResponse->json()) {
-                $pdfParsed = new PdfParsed();
-                $pdfParsed->ip_address = $request->ip();
-                $pdfParsed->user_agent = $request->userAgent();
-                if (isset($parsedData['data']['candidateName'][0]['firstName'], $parsedData['data']['candidateName'][0]['familyName'])) {
-                    $pdfParsed->full_name = $parsedData['data']['candidateName'][0]['firstName'] . ' ' . $parsedData['data']['candidateName'][0]['familyName'];
-                }
-                $pdfParsed->file_name = $file->getClientOriginalName();
-                $pdfParsed->parsed_data = $parsedData;
-                $pdfParsed->save();
-                return response()->json([
-                    'success' => true,
-                    'data' => $parsedData
-                ]);
-            }
-
+            return response()->json([
+                'error' => 'Failed to get evaluation from AI model',
+            ], 500);
             
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to get evaluation from AI model', 'details' => $e->getMessage()], 500);
         }
-     
-         return response()->json([
-             'success' => true,
-             'data' => $decoded
-         ]);
-     }
+    }
      
 
 
