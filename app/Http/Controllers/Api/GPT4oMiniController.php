@@ -247,26 +247,26 @@ class GPT4oMiniController extends Controller
     
     {
       "header": {
-        "applicant_name": "John Doe",
-        "applicant_address": "123 Main Street, Faisalabad, Pakistan",
-        "applicant_email": "johndoe@email.com",
-        "applicant_phone": "+92 300 1234567",
-        "date": "2025-09-05"
+        "applicant_name": "",
+        "applicant_address": "",
+        "applicant_email": "",
+        "applicant_phone": "",
+        "date": ""
       },
       "recipient": {
-        "hiring_manager_name": "Jane Smith",
-        "company_name": "Tech Solutions Ltd.",
-        "company_address": "456 Business Road, London, UK"
+        "hiring_manager_name": "",
+        "company_name": "",
+        "company_address": ""
       },
       "body": {
         "greeting": "Dear Hiring Manager,",
-        "opening_paragraph": "I am writing to express my interest in the Frontend Developer position at Tech Solutions Ltd. With a strong background in React.js, Next.js, and Laravel, I bring both technical expertise and problem-solving skills to the role.",
+        "opening_paragraph": "",
         "middle_paragraphs": [
-          "During my previous role as a Laravel Developer at Techtrack Software Solutions, I worked on developing scalable web applications, implementing RESTful APIs, and integrating third-party services.",
-          "I have also gained experience in Flutter and Dart for mobile development, and I am currently enhancing my skills in Machine Learning to contribute to data-driven applications."
+          "",
+          "",
         ],
-        "closing_paragraph": "I would welcome the opportunity to discuss how my skills and enthusiasm can contribute to your team’s success. Thank you for considering my application.",
-        "signature": "Sincerely, John Doe"
+        "closing_paragraph": "",
+        "signature": "Sincerely, {applicant_name}"
       }
     }
     EOT;
