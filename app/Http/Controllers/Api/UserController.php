@@ -43,6 +43,10 @@ class UserController extends Controller
         $user->education_level_id = $request->education_level_id ?? null;
         $user->linkedin_profile_url = $request->linkedin_profile_url ?? null;
         $user->save();
-        return response()->json($user);
+        return response()->json([
+            'status' => true,
+            'message' => 'Profile updated successfully',
+            'user' => $user,
+        ]);
     }
 }
