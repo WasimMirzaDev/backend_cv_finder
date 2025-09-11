@@ -180,7 +180,7 @@ class GPT4oMiniController extends Controller
                 ],
                 'temperature' => 0.0,
                 'response_format' => ['type' => 'json_object'], // Ensure JSON output
-                'max_tokens' => 5000 , // Allow for detailed evaluation
+                'max_tokens' => 3000 , // Allow for detailed evaluation
             ]);
 
             $content = $response->json();
