@@ -12,26 +12,21 @@ class GPT4oMiniController extends Controller
     public function generateCvAi(Request $request)
     {
         $request->validate([
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'phone' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
             'jobTitle' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
         ]);
 
         $apiKey = config('services.openai.api_key');
 
+        $name = Auth::user()->name;
+        $email = Auth::user()->email;
+
         $prompt = <<<EOT
             Create a professional, ATS-optimized CV in JSON format using the provided user details. Ensure it's written in a clear, natural tone with proper localization. Include all required fields, even if null. Generate relevant content from the description when possible. Return only valid JSON without any explanations or markdown.
 
             User data:
-            First Name: {$request->firstName}
-            Last Name: {$request->lastName}
-            Email: {$request->email}
-            Phone: {$request->phone}
-            Address: {$request->address}
+            Name: {$name}
+            Email: {$email}
             Job Title: {$request->jobTitle}
             Description: {$request->description}
 

@@ -59,6 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/payment-method-intent/{customerId}', [StripeController::class, 'createSetupIntent']);
     Route::post('/subscription/payment-method-default/{customerId}', [StripeController::class, 'makeDefaultPaymentMethod']);
     Route::post('/subscription/change-plan/{planId}', [StripeController::class, 'changePlan']);
+
+
+    //cv related
+    Route::post('/generate-cv-ai', [GPT4oMiniController::class, 'generateCvAi']);
 });
 
 
@@ -68,7 +72,6 @@ Route::get('/test', function () {
 });
 
 // Resume parsing endpoint
-Route::post('/generate-cv-ai', [GPT4oMiniController::class, 'generateCvAi']);
 Route::post('/parse-resume', [ResumeController::class, 'parseResumeOCRPyScript']);
 Route::post('/analyze-paragraph', [GPT4oMiniController::class, 'analyzeResume']);
 Route::get('/migrate', function () {
