@@ -167,7 +167,7 @@ class GPT4oMiniController extends Controller
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-4o',
+                'model' => 'gpt-4o-mini',
                 'messages' => [
                     [
                         'role' => 'system',
