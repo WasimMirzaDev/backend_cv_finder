@@ -20,13 +20,14 @@ class GPT4oMiniController extends Controller
 
         $name = Auth::user()->name;
         $email = Auth::user()->email;
-
+        $phone = Auth::user()->phone;
         $prompt = <<<EOT
             Create a professional, ATS-optimized CV in JSON format using the provided user details. Ensure it's written in a clear, natural tone with proper localization. Include all required fields, even if null. Generate relevant content from the description when possible. Return only valid JSON without any explanations or markdown.
 
             User data:
             Name: {$name}
             Email: {$email}
+            Phone: {$phone}
             Job Title: {$request->jobTitle}
             Description: {$request->description}
 
@@ -233,6 +234,7 @@ class GPT4oMiniController extends Controller
       // return $request->jsonResume;
       $name = Auth::user()->name;
       $email = Auth::user()->email;
+      $phone = Auth::user()->phone;
 
       $apiKey = config('services.openai.api_key');
 
@@ -286,7 +288,7 @@ Schema:
 Extraction hints (use best-effort mapping):
 - Name: data.candidateName[0].firstName + " " + data.candidateName[0].familyName OR data.name OR basics.name OR {$name}
 - Email: data.email[0] OR data.basics.email OR {$email}
-- Phone: data.phoneNumber[0].formattedNumber OR data.phone OR basics.phone
+- Phone: data.phoneNumber[0].formattedNumber OR data.phone OR basics.phone OR {$phone}
 - Address: data.location.formatted OR join([street, city, stateCode, postalCode, country]) when present OR basics.location.address
 EOT;
 
