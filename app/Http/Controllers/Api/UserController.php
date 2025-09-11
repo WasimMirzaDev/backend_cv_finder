@@ -37,6 +37,12 @@ class UserController extends Controller
 
     public function uploadProfile(Request $request)
     {
+        $request->validate([
+            'industry_id' => 'sometimes|exists:cv_subcategories,id',
+            'role_id' => 'sometimes|exists:cv_roles,id',
+            'education_level_id' => 'sometimes|exists:cv_education_levels,id',
+            'linkedin_profile_url' => 'nullable|url',
+        ]);
         $user = Auth::user();
         $user->preferred_industry_id = $request->industry_id ?? null;
         $user->role_id = $request->role_id ?? null;
