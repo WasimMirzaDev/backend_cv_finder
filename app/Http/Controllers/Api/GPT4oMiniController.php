@@ -222,6 +222,112 @@ class GPT4oMiniController extends Controller
         }
     }
 
+
+
+    public function generateCoverLetterAi(Request $request){
+      $request->validate([
+        'jsonResume' => 'required',
+      ]);
+
+    $apiKey = config('services.openai.api_key');
+
+    // $name = Auth::user()->name;
+    // $email = Auth::user()->email;
+
+    $prompt = <<<EOT
+        Create a professional, ATS-optimized CV in JSON format using the provided user details. Ensure it's written in a clear, natural tone with proper localization. Include all required fields, even if null. Generate relevant content from the description when possible. Return only valid JSON without any explanations or markdown.
+
+        User data:{$request->jsonResume}
+
+        Here is the required format you must follow:
+
+        {
+          "header": {
+            "applicant_name": "John Doe",
+            "applicant_address": "123 Main Street, Faisalabad, Pakistan",
+            "applicant_email": "johndoe@email.com",
+            "applicant_phone": "+92 300 1234567",
+            "date": "2025-09-05"
+          },
+          "recipient": {
+            "hiring_manager_name": "Jane Smith",
+            "company_name": "Tech Solutions Ltd.",
+            "company_address": "456 Business Road, London, UK"
+          },
+          "body": {
+            "greeting": "Dear Hiring Manager,",
+            "opening_paragraph": "I am writing to express my interest in the Frontend Developer position at Tech Solutions Ltd. With a strong background in React.js, Next.js, and Laravel, I bring both technical expertise and problem-solving skills to the role.",
+            "middle_paragraphs": [
+              "During my previous role as a Laravel Developer at Techtrack Software Solutions, I worked on developing scalable web applications, implementing RESTful APIs, and integrating third-party services.",
+              "I have also gained experience in Flutter and Dart for mobile development, and I am currently enhancing my skills in Machine Learning to contribute to data-driven applications."
+            ],
+            "closing_paragraph": "I would welcome the opportunity to discuss how my skills and enthusiasm can contribute to your team’s success. Thank you for considering my application.",
+            "signature": "Sincerely, John Doe"
+          }
+        }
+
+        EOT;
+
+    try {
+        $response = Http::timeout(60)->withHeaders([
+            'Authorization' => "Bearer {$apiKey}",
+            'Content-Type' => 'application/json',
+        ])->post('https://api.openai.com/v1/chat/completions', [
+            'model' => 'gpt-4o',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a CV JSON generator. Always reply in strict JSON matching the required format with all keys present. Use null if no value is suitable.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => 0.0,
+            'response_format' => ['type' => 'json_object'], // Ensure JSON output
+            'max_tokens' => 3000 , // Allow for detailed evaluation
+        ]);
+
+        $content = $response->json();
+
+        if (isset($content['choices'][0]['message']['content'])) {
+            $aiText = $content['choices'][0]['message']['content'];
+
+            // Extract only the JSON part
+            $jsonStart = strpos($aiText, '{');
+            if ($jsonStart !== false) {
+                $jsonString = substr($aiText, $jsonStart);
+                $decoded = json_decode($jsonString, true);
+
+                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+                    return response()->json($decoded);
+                }
+
+                return response()->json([
+                    'error' => 'Invalid JSON from GPT-4o',
+                    'raw' => $aiText,
+                ], 500);
+            }
+
+            return response()->json([
+                'error' => 'No JSON found in GPT-4o response',
+                'raw' => $aiText,
+            ], 500);
+        }
+
+        return response()->json([
+            'error' => 'Empty response from GPT-4o',
+            'raw' => $content
+        ], 500);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'error' => 'Exception thrown',
+            'message' => $th->getMessage(),
+        ], 500);
+    }
+    }
+
     public function analyzeResume(Request $request)
     {
         $request->validate([

@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //cv related
     Route::post('/generate-cv-ai', [GPT4oMiniController::class, 'generateCvAi']);
+    Route::post('/generate-cover-letter', [GPT4oMiniController::class, 'generateCoverLetterAi'])
 });
 
 
