@@ -229,6 +229,9 @@ class GPT4oMiniController extends Controller
         'jsonResume' => 'required',
       ]);
 
+
+      dd($request->jsonResume);
+
       $apiKey = config('services.openai.api_key');
 
       // Accept either JSON string or already-parsed array/object
