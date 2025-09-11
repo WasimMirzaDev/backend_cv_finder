@@ -231,6 +231,8 @@ class GPT4oMiniController extends Controller
 
 
       // return $request->jsonResume;
+      $name = Auth::user()->name;
+      $email = Auth::user()->email;
 
       $apiKey = config('services.openai.api_key');
 
@@ -282,8 +284,8 @@ Schema:
 }
 
 Extraction hints (use best-effort mapping):
-- Name: data.candidateName[0].firstName + " " + data.candidateName[0].familyName OR data.name OR basics.name
-- Email: data.email[0] OR data.basics.email
+- Name: data.candidateName[0].firstName + " " + data.candidateName[0].familyName OR data.name OR basics.name OR {$name}
+- Email: data.email[0] OR data.basics.email OR {$email}
 - Phone: data.phoneNumber[0].formattedNumber OR data.phone OR basics.phone
 - Address: data.location.formatted OR join([street, city, stateCode, postalCode, country]) when present OR basics.location.address
 EOT;
