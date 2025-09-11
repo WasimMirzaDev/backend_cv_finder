@@ -229,107 +229,112 @@ class GPT4oMiniController extends Controller
         'jsonResume' => 'required',
       ]);
 
-    $apiKey = config('services.openai.api_key');
+      $apiKey = config('services.openai.api_key');
 
-    // $name = Auth::user()->name;
-    // $email = Auth::user()->email;
-
-    $prompt = <<<EOT
-    Create a professional, ATS-optimized Cover Letter in JSON format using the provided user details. 
-    Ensure it's written in a clear, natural tone with proper localization. 
-    Include all required fields, even if null. 
-    Generate relevant content from the description, qualifications, and employment history when possible. 
-    Return only valid JSON without any explanations or markdown.
-    
-    User data: {$request->jsonResume}
-    
-    Here is the required format you must follow (fill with relevant professional text, never placeholders, use null if no data):
-    
-    {
-      "header": {
-        "applicant_name": "",
-        "applicant_address": "",
-        "applicant_email": "",
-        "applicant_phone": "",
-        "date": ""
-      },
-      "recipient": {
-        "hiring_manager_name": "",
-        "company_name": "",
-        "company_address": ""
-      },
-      "body": {
-        "greeting": "Dear Hiring Manager,",
-        "opening_paragraph": "",
-        "middle_paragraphs": [
-          "",
-          "",
-        ],
-        "closing_paragraph": "",
-        "signature": "Sincerely, {applicant_name}"
+      // Accept either JSON string or already-parsed array/object
+      $resumePayload = $request->jsonResume;
+      if (is_string($resumePayload)) {
+        $decoded = json_decode($resumePayload, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+          $resumePayload = $decoded;
+        }
       }
-    }
-    EOT;
-    
 
-    try {
+      // Ensure we pass a compact JSON for the model context
+      $resumeJson = json_encode($resumePayload, JSON_UNESCAPED_UNICODE);
+
+      // Use today's date as a sane default if model cannot infer a date
+      $today = now()->format('F j, Y');
+
+      $instructions = <<<EOT
+You generate ATS-friendly cover letters as strict JSON only.
+Rules:
+- Parse the provided resume JSON and extract real values for name, address, email, and phone.
+- Use resume content to write tailored paragraphs highlighting relevant achievements, skills, and experience.
+- If any field is missing in the resume, set it to null except "date" which should default to {$today}.
+- Do not invent company details unless present in input; keep them null.
+- Always return a single JSON object matching the schema below. No markdown or commentary.
+
+Schema:
+{
+  "header": {
+    "applicant_name": string|null,
+    "applicant_address": string|null,
+    "applicant_email": string|null,
+    "applicant_phone": string|null,
+    "date": string
+  },
+  "recipient": {
+    "hiring_manager_name": string|null,
+    "company_name": string|null,
+    "company_address": string|null
+  },
+  "body": {
+    "greeting": string,
+    "opening_paragraph": string,
+    "middle_paragraphs": [string, ...],
+    "closing_paragraph": string,
+    "signature": string
+  }
+}
+
+Extraction hints (use best-effort mapping):
+- Name: data.candidateName[0].firstName + " " + data.candidateName[0].familyName OR data.name OR basics.name
+- Email: data.email[0] OR data.basics.email
+- Phone: data.phoneNumber[0].formattedNumber OR data.phone OR basics.phone
+- Address: data.location.formatted OR join([street, city, stateCode, postalCode, country]) when present OR basics.location.address
+EOT;
+
+      try {
         $response = Http::timeout(60)->withHeaders([
-            'Authorization' => "Bearer {$apiKey}",
-            'Content-Type' => 'application/json',
+          'Authorization' => "Bearer {$apiKey}",
+          'Content-Type' => 'application/json',
         ])->post('https://api.openai.com/v1/chat/completions', [
-            'model' => 'gpt-4o-mini',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'You are a Cover Letter JSON generator. Always reply in strict JSON matching the required format with all keys present. Use null if no value is suitable.'
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $prompt
-                ]
+          'model' => 'gpt-4o-mini',
+          'messages' => [
+            [
+              'role' => 'system',
+              'content' => 'You are a Cover Letter JSON generator. Always reply in strict JSON matching the required format with all keys present. Use null if no value is suitable.'
             ],
-            'temperature' => 0.0,
-            'response_format' => ['type' => 'json_object'], // Ensure JSON output
-            'max_tokens' => 3000 , // Allow for detailed evaluation
+            [
+              'role' => 'user',
+              'content' => $instructions
+            ],
+            [
+              'role' => 'user',
+              'content' => "RESUME_JSON:" . $resumeJson
+            ],
+          ],
+          'temperature' => 0.1,
+          'response_format' => ['type' => 'json_object'],
+          'max_tokens' => 2000,
         ]);
 
         $content = $response->json();
 
-        if (isset($content['choices'][0]['message']['content'])) {
-            $aiText = $content['choices'][0]['message']['content'];
+        if (!isset($content['choices'][0]['message']['content'])) {
+          return response()->json([
+            'error' => 'Empty response from GPT-4o-mini',
+            'raw' => $content,
+          ], 500);
+        }
 
-            // Extract only the JSON part
-            $jsonStart = strpos($aiText, '{');
-            if ($jsonStart !== false) {
-                $jsonString = substr($aiText, $jsonStart);
-                $decoded = json_decode($jsonString, true);
-
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    return response()->json($decoded);
-                }
-
-                return response()->json([
-                    'error' => 'Invalid JSON from GPT-4o-mini',
-                    'raw' => $aiText,
-                ], 500);
-            }
-
-            return response()->json([
-                'error' => 'No JSON found in GPT-4o-mini response',
-                'raw' => $aiText,
-            ], 500);
+        $jsonText = $content['choices'][0]['message']['content'];
+        $decoded = json_decode($jsonText, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+          return response()->json($decoded);
         }
 
         return response()->json([
-            'error' => 'Empty response from GPT-4o-mini',
-            'raw' => $content
+          'error' => 'Invalid JSON from GPT-4o-mini',
+          'raw' => $jsonText,
         ], 500);
-    } catch (\Throwable $th) {
+      } catch (\Throwable $th) {
         return response()->json([
-            'error' => 'Exception thrown',
-            'message' => $th->getMessage(),
+          'error' => 'Exception thrown',
+          'message' => $th->getMessage(),
         ], 500);
-    }
+      }
     }
 
     public function analyzeResume(Request $request)
