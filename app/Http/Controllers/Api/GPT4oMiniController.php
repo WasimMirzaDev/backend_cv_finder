@@ -304,24 +304,24 @@ class GPT4oMiniController extends Controller
                 $jsonString = substr($aiText, $jsonStart);
                 $decoded = json_decode($jsonString, true);
 
-                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+                if (json_last_error() === JSON_ERROR_NONE) {
                     return response()->json($decoded);
                 }
 
                 return response()->json([
-                    'error' => 'Invalid JSON from GPT-4o',
+                    'error' => 'Invalid JSON from GPT-4o-mini',
                     'raw' => $aiText,
                 ], 500);
             }
 
             return response()->json([
-                'error' => 'No JSON found in GPT-4o response',
+                'error' => 'No JSON found in GPT-4o-mini response',
                 'raw' => $aiText,
             ], 500);
         }
 
         return response()->json([
-            'error' => 'Empty response from GPT-4o',
+            'error' => 'Empty response from GPT-4o-mini',
             'raw' => $content
         ], 500);
     } catch (\Throwable $th) {
