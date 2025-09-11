@@ -163,7 +163,7 @@ class GPT4oMiniController extends Controller
             EOT;
 
         try {
-            $response = Http::withHeaders([
+            $response = Http::timeout(60)->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/chat/completions', [
@@ -180,7 +180,7 @@ class GPT4oMiniController extends Controller
                 ],
                 'temperature' => 0.0,
                 'response_format' => ['type' => 'json_object'], // Ensure JSON output
-                'max_tokens' => 2048 , // Allow for detailed evaluation
+                'max_tokens' => 5000 , // Allow for detailed evaluation
             ]);
 
             $content = $response->json();
