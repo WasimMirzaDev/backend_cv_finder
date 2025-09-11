@@ -230,7 +230,7 @@ class GPT4oMiniController extends Controller
       ]);
 
 
-      return $request->jsonResume;
+      // return $request->jsonResume;
 
       $apiKey = config('services.openai.api_key');
 
