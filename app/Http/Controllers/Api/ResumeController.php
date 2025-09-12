@@ -67,11 +67,19 @@ class ResumeController extends Controller
      */
     public function show(string $id)
     {
+        
         $resume = CvResume::findOrFail($id);
-        return response()->json([
-            'success' => true,
-            'data' => $resume
-        ]);
+        if($resume->user_id == Auth::user()->id){
+            return response()->json([
+                'success' => true,
+                'data' => $resume
+            ]);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => "Required CV Not Found!"
+            ]);
+        }
     }
 
     /**
