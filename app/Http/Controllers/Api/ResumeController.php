@@ -466,7 +466,7 @@ class ResumeController extends Controller
                 - Ensure `rawText` contains the same original content provided.
             PROMPT;
 
-            $gptResponse = Http::timeout(60)->withHeaders([
+            $gptResponse = Http::timeout(120)->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/chat/completions', [
