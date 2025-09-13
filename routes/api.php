@@ -64,6 +64,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //cv related
     Route::post('/generate-cv-ai', [GPT4oMiniController::class, 'generateCvAi']);
     Route::post('/generate-cover-letter', [GPT4oMiniController::class, 'generateCoverLetterAi']);
+
+    //interview
+    Route::get('/questions', [QuestionController::class, 'getQuestions']);
+    Route::get('/questions/{questionId}', [QuestionController::class, 'getQuestion']);
+
 });
 
 
@@ -92,8 +97,6 @@ Route::prefix('filters')->group(function () {
     Route::put('/difficulties/{difficultyId}', [QuestionFilterController::class, 'editDifficultyLevel']);
 });
 
-Route::get('/questions', [QuestionController::class, 'getQuestions']);
-Route::get('/questions/{questionId}', [QuestionController::class, 'getQuestion']);
 
 Route::get('/get-industries', [UserController::class, 'getIndustries']);
 Route::get('/get-roles', [UserController::class, 'getRoles']);
