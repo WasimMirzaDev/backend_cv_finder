@@ -28,7 +28,7 @@ class JobController extends Controller
             ]);
 
            $data = $response->json();
-           dd($data);
+           return $data;
            $prompt_jobs = [];
            foreach ($data['data'] as $job) {
             $prompt_jobs[] = [
