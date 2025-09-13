@@ -18,7 +18,8 @@ class JobController extends Controller
 
             $response = Http::withHeaders([
                 'x-rapidapi-host' => 'jsearch.p.rapidapi.com',
-                'x-rapidapi-key' => 'a007b488d3msh5fe56b4d9e822b1p1fb2bcjsnf9de8d4ed9ee', // TODO: Move to .env
+                // 'x-rapidapi-key' => 'a007b488d3msh5fe56b4d9e822b1p1fb2bcjsnf9de8d4ed9ee', // TODO: Move to .env
+                'x-rapidapi-key' => '5c3bd1c2b6msh6bc0f0900adf47dp14f5c6jsn80743d5bec82',
             ])->get('https://jsearch.p.rapidapi.com/search', [
                 'query' => $query,
                 'page' => $request->input('page', 2),
@@ -28,7 +29,7 @@ class JobController extends Controller
             ]);
 
            $data = $response->json();
-           return $data;
+           
            $prompt_jobs = [];
            foreach ($data['data'] as $job) {
             $prompt_jobs[] = [
