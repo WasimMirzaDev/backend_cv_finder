@@ -23,4 +23,20 @@ class CvRecentActivityController extends Controller
             
         return response()->json($recentActivities);
     }
+
+    public function recentCreatedCv(Request $request)
+    {
+        $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
+            ->where('type','resume')
+            ->with(['resume', 'interview'])
+            ->latest()
+            ->take($request->limit ?? 3)
+            ->get()
+            ->map(function ($activity) {
+                $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
+                return $activity;
+            });
+            
+        return response()->json($recentActivities);
+    }
 }
