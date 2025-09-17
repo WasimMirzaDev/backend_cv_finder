@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\RevolutController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\Gateways\StripeWebhookController;
 use App\Http\Controllers\Api\Gateways\StripeController;
+use App\Http\Controllers\Api\PhoneVerificationController;
 
 /*
  * |--------------------------------------------------------------------------
@@ -34,6 +35,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/send-otp', [PhoneVerificationController::class, 'sendOtp']);
+Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-profile', [UserController::class, 'uploadProfile']);

@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+
+
+
+    
     public function register(Request $request)
     {
         $request->validate([
