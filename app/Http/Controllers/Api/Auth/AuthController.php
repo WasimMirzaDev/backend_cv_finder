@@ -4,16 +4,23 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\PendingUser;
+use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
-{
+{   
+
+    protected $twilio;
+
+    public function __construct(TwilioService $twilio)
+    {
+        $this->twilio = $twilio;
+    }
 
 
-
-    
     public function register(Request $request)
     {
         $request->validate([
@@ -23,22 +30,22 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|max:18|confirmed',
         ]);
 
-        $user = User::create([
+        $user = PendingUser::create([
             'name' => $request->name,
             'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $verification = $this->twilio->sendVerification($request->phone);
 
         return response()->json([
             'status' => true,
-            'message' => 'User registered successfully',
+            'verification_required' => true,
+            'message' => 'OTP sent successfully.',
+            'sid' => $verification->sid,
             'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+        ], 201);
     }
 
     public function login(Request $request)
