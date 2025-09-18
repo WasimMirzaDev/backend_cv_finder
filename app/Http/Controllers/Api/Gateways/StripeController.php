@@ -77,7 +77,7 @@ class StripeController extends Controller
                 ],
                 'customer_email' => Auth::user()->email ?? '',
                 'success_url' => 'https://midnightblue-yak-450228.hostingersite.com/welcome?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'https://midnightblue-yak-450228.hostingersite.com/welcome',
+                'cancel_url' => 'https://midnightblue-yak-450228.hostingersite.com/',
             ]);
     
             return response()->json([
@@ -102,7 +102,7 @@ class StripeController extends Controller
                 ],
                 'customer_email' => Auth::user()->email ?? '',
                 'success_url' => 'https://midnightblue-yak-450228.hostingersite.com/welcome/?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'https://midnightblue-yak-450228.hostingersite.com/welcome',
+                'cancel_url' => 'https://midnightblue-yak-450228.hostingersite.com/',
             ]);
     
             return response()->json([
