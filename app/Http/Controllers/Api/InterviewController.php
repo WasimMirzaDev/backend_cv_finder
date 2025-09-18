@@ -12,6 +12,7 @@ use App\Models\QuestionType;
 use App\Models\Subcategory;
 use App\Models\CvRecentActivity;
 use Illuminate\Support\Facades\Auth;
+use App\Models\GettingStartedStep;
 
 class InterviewController extends Controller
 {
@@ -373,6 +374,11 @@ class InterviewController extends Controller
         'ip_address' => request()->ip(),
         'user_agent' => request()->userAgent(),
     ]);
+
+    
+    $steps = GettingStartedStep::where('user_id',Auth::user()->id)->first();
+    $steps = $steps->first_interview = true;
+    $steps->save();
 
     return response()->json([
         'message' => 'Audio submitted & evaluated successfully',

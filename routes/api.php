@@ -51,7 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //recent acitivities
     Route::get('/recent-activities', [CvRecentActivityController::class, 'index']);
     Route::get('/recent-created-cvs', [CvRecentActivityController::class, 'recentCreatedCv']);
-
+    Route::get('/completed-steps',[CvRecentActivityController::class, 'completedSteps']);
+    Route::post('/update-steps',[CvRecentActivityController::class, 'updateSteps']);
 
     Route::get('/fetch-jobs', [JobController::class, 'fetchJobs']);
 
