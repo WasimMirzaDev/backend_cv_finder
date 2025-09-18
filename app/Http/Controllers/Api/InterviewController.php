@@ -376,9 +376,8 @@ class InterviewController extends Controller
     ]);
 
     
-    $steps = GettingStartedStep::where('user_id',Auth::user()->id)->first();
-    $steps = $steps->first_interview = true;
-    $steps->save();
+    GettingStartedStep::where('user_id', auth()->id())
+    ->update(['first_cv' => true]);
 
     return response()->json([
         'message' => 'Audio submitted & evaluated successfully',
