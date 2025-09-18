@@ -347,14 +347,18 @@ EOT;
     public function analyzeResume(Request $request)
     {
         $request->validate([
-            'paragraph' => 'required|string|max:1000',
+            'headline' => 'required|string|max:1000',
+            'summary' => 'required|string|max:5000',
+            'workExperience' => 'required|array',
+            'workExperience.*' => 'required|string|max:5000', // each experience is a paragraph
         ]);
-
-        $paragraph = $request->input('paragraph');
+    
+        $headline = $request->input('headline');
+        $summary = $request->input('summary');
+        $workExperience = $request->input('workExperience'); // array of strings
         $apiKey = config('services.openai.api_key');
-
+    
         try {
-            // Single API call to get both analysis and suggestions
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
@@ -363,52 +367,56 @@ EOT;
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a professional CV/resume analyzer. Analyze the provided CV paragraph and provide both issues and suggested improvements.'
+                        'content' => 'You are a professional CV/resume analyzer. Analyze each section of the resume and provide issues + improvements.'
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Analyze this CV profile paragraph:\n\n{$paragraph}\n\n" .
-                                     "Respond with a JSON object containing:\n" .
-                                     "1. 'issues': An array of exactly 5 objects, each with 'issue' and 'description' (max 15 words per description)\n" .
-                                     "2. 'suggested_paragraph': A rewritten version of the paragraph that is more impactful, specific with technologies, achievements, and role focus. Keep it concise.\n\n" .
-                                     "Format your response as a valid JSON object with these exact keys: {\"issues\": [{\"issue\": string, \"description\": string}, ...], \"suggested_paragraph\": string}"
+                        'content' => "Analyze the following resume sections:\n\n" .
+                                     "Headline: {$headline}\n\n" .
+                                     "Summary: {$summary}\n\n" .
+                                     "Work Experience: " . implode("\n- ", $workExperience) . "\n\n" .
+                                     "Respond with a valid JSON object structured as:\n" .
+                                     "{\n" .
+                                     "  \"headline\": {\"issues\": [{\"issue\": string, \"description\": string}, ...], \"suggested_paragraph\": string},\n" .
+                                     "  \"summary\": {\"issues\": [...], \"suggested_paragraph\": string},\n" .
+                                     "  \"workExperience\": [\n" .
+                                     "      {\"original\": string, \"issues\": [...], \"suggested_paragraph\": string},\n" .
+                                     "      {\"original\": string, \"issues\": [...], \"suggested_paragraph\": string},\n" .
+                                     "      ...\n" .
+                                     "  ]\n" .
+                                     "}\n\n"
                     ]
                 ],
                 'temperature' => 0.5,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'response_format' => ['type' => 'json_object']
             ]);
-
+    
             $content = $response->json();
-
+    
             if (!isset($content['choices'][0]['message']['content'])) {
                 return response()->json([
                     'status' => false,
-                    'error' => 'Empty response from GPT-4o',
+                    'error' => 'Empty response from GPT',
                     'raw' => $content
                 ], 500);
             }
-
-
+    
             $aiResponse = json_decode($content['choices'][0]['message']['content'], true);
-
+    
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json([
                     'status' => false,
-                    'error' => 'Invalid JSON from GPT-4o',
+                    'error' => 'Invalid JSON from GPT',
                     'raw' => $content['choices'][0]['message']['content']
                 ], 500);
             }
-
+    
             return response()->json([
                 'status' => true,
-                'data' => [
-                    'issues' => $aiResponse['issues'] ?? [],
-                    'suggested_changes' => $aiResponse['suggested_paragraph'] ?? '',
-                    'original_paragraph' => $paragraph
-                ]
+                'data' => $aiResponse
             ]);
-
+    
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => false,
@@ -418,4 +426,5 @@ EOT;
             ], 500);
         }
     }
+    
 }
