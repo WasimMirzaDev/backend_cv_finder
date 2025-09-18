@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\PendingUser;
+use App\Models\GettingGettingStartedStep;
 // use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,12 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+
+
+        $steps = GettingStartedStep::create([
+            'user_id' => $user->id,
+            'sign_up' => true,
         ]);
 
         // $verification = $this->twilio->sendVerification($request->phone);
