@@ -46,31 +46,33 @@ class CvRecentActivityController extends Controller
         return response()->json($steps);
     }
 
-    public function updateSteps(Request $request){
-        $steps = GettingStartedStep::where('user_id', Auth::user()->id)->firstOrFail();
-        
-        // Update each field that exists in the request
+    public function updateSteps(Request $request)
+    {
+        $steps = GettingStartedStep::where('user_id', Auth::id())->firstOrFail();
+    
         $updatableFields = [
             'progress_tracker',
             'applied_job',
             'refer_friend',
         ];
-        
-        $updated = false;
+    
+        $dataToUpdate = [];
         foreach ($updatableFields as $field) {
             if ($request->has($field)) {
-                $steps->$field = $request->input($field);
-                $updated = true;
+                $dataToUpdate[$field] = filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
             }
         }
-        
-        if ($updated) {
-            $steps->save();
+    
+        $updated = false;
+        if (!empty($dataToUpdate)) {
+            $steps->update($dataToUpdate);
+            $updated = true;
         }
-        
+    
         return response()->json([
             'success' => $updated,
-            'data' => $steps
+            'data' => $steps->fresh() // reload updated model
         ]);
     }
+    
 }
