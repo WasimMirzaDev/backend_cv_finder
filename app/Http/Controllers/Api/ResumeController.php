@@ -58,9 +58,9 @@ class ResumeController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        $steps = GettingStartedStep::where('user_id', auth()->id())->first();
-        $steps = $steps->first_cv = true;
-        $steps->save();
+        GettingStartedStep::where('user_id', auth()->id())
+        ->update(['first_cv' => true]);
+    
 
         return response()->json([
             'success' => true,
