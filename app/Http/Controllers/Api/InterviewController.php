@@ -377,7 +377,7 @@ class InterviewController extends Controller
 
     
     GettingStartedStep::where('user_id', auth()->id())
-    ->update(['first_cv' => true]);
+    ->update(['first_interview' => true]);
 
     return response()->json([
         'message' => 'Audio submitted & evaluated successfully',
