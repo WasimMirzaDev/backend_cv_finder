@@ -411,6 +411,9 @@ EOT;
                     'raw' => $content['choices'][0]['message']['content']
                 ], 500);
             }
+
+            $aiResponse['data']['headline']['original'] = $headline;
+            $aiResponse['data']['summary']['original'] = $summary;
     
             return response()->json([
                 'status' => true,
