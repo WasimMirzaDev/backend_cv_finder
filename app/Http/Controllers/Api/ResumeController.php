@@ -149,6 +149,15 @@ class ResumeController extends Controller
             ],403);
         }
 
+        $recentActivity = CvRecentActivity::where('user_id', Auth::user()->id)
+        ->where('type_id', $id)
+        ->where('type','resume')
+        ->with(['resume', 'interview'])
+        ->first();
+
+        $recentActivity->delete();
+
+
         $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
         ->where('type','resume')
         ->with(['resume', 'interview'])
@@ -159,6 +168,8 @@ class ResumeController extends Controller
             $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
             return $activity;
         });
+
+
         return response()->json([
             'success' => true,
             'message' => 'Resume deleted successfully',
