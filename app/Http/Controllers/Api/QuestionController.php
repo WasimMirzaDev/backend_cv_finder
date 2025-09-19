@@ -154,7 +154,18 @@ class QuestionController extends Controller
     
     public function getQuestions(Request $request)
     {
-        $questions = Question::where('difficulty_slug', $request->difficulty_slug)->where('questiontype_slug', $request->questiontype_slug)->where('subcategories_slug', $request->subcategories_slug)->get();
+        // Check if any of the required parameters are missing
+        if (empty($request->difficulty_slug) || empty($request->questiontype_slug) || empty($request->subcategories_slug)) {
+            // Return first 6 questions if any parameter is missing
+            $questions = Question::take(6)->get();
+        } else {
+            // All parameters are present, filter by all conditions
+            $questions = Question::where('difficulty_slug', $request->difficulty_slug)
+                ->where('questiontype_slug', $request->questiontype_slug)
+                ->where('subcategories_slug', $request->subcategories_slug)
+                ->get();
+        }
+        
         return response()->json($questions);
     }
     
