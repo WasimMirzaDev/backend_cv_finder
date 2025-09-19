@@ -125,9 +125,45 @@ class ResumeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function delete(string $id)
     {
-        //
+        $resume = CvResume::findOrFail($id);
+        if($resume->user_id == Auth::user()->id){
+        $resume->delete();
+        }
+        else{
+            $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
+            ->where('type','resume')
+            ->with(['resume', 'interview'])
+            ->latest()
+            ->take($request->limit ?? 3)
+            ->get()
+            ->map(function ($activity) {
+                $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
+                return $activity;
+            });
+            return response()->json([
+                'success' => true,
+                'message' => 'Cannot delete this resume.',
+                'data' => $recentActivities
+            ],403);
+        }
+
+        $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
+        ->where('type','resume')
+        ->with(['resume', 'interview'])
+        ->latest()
+        ->take($request->limit ?? 3)
+        ->get()
+        ->map(function ($activity) {
+            $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
+            return $activity;
+        });
+        return response()->json([
+            'success' => true,
+            'message' => 'Resume deleted successfully',
+            'data' => $recentActivities
+        ]);
     }
 
     /**

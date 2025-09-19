@@ -110,9 +110,6 @@ class StripeController extends Controller
                 'checkoutUrl' => $session->url,
             ]);
         }
-
-
-       
     }
 
     public function cancelSubscription(Request $request)

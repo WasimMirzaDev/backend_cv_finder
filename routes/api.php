@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/v1/resume/create-empty', [ResumeController::class, 'createEmpty']);
     Route::get('/v1/resume-by-id/{id}', [ResumeController::class, 'show']);
     Route::put('/v1/resume/{id}', [ResumeController::class, 'update']);
+    Route::delete('/v1/resume/{id}', [ResumeController::class, 'delete']);
     Route::get('/interview/history', [InterviewController::class, 'getInterviewHistory']);
     Route::post('/interview/submit-audio', [InterviewController::class, 'submitAudio']);
 

@@ -13,7 +13,7 @@ class GPT4oMiniController extends Controller
     {
         $request->validate([
             'jobTitle' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
+            'description' => 'required|string|max:1500',
         ]);
 
         $apiKey = config('services.openai.api_key');
