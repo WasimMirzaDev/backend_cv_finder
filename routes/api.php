@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //interview
     Route::get('/questions', [QuestionController::class, 'getQuestions']);
+    Route::get('/random-questions', [QuestionController::class, 'getRandomQuestions']);
     Route::get('/questions/{questionId}', [QuestionController::class, 'getQuestion']);
 
 });

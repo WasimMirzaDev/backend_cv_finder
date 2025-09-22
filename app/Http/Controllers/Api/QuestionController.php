@@ -168,6 +168,18 @@ class QuestionController extends Controller
         
         return response()->json($questions);
     }
+
+
+    public function getRandomQuestions(Request $request)
+    {
+        // Get 6 random questions
+        $questions = Question::inRandomOrder()
+            ->take(6)
+            ->get();
+        
+        return response()->json($questions);
+    }
+
     
     public function getQuestion($questionId)
     {
