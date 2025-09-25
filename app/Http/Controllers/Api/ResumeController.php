@@ -377,7 +377,7 @@ class ResumeController extends Controller
         try {
             $apiKey = config('services.openai.api_key');
             $style_adjective = $request->languageStyle ?? "Friendly";
-            $description = $request->additionalInfo ?? "";          
+            $job_description = $request->additionalInfo ?? "";          
         
             // Construct detailed evaluation prompt based on the framework
             $prompt = <<<PROMPT
@@ -546,7 +546,7 @@ class ResumeController extends Controller
                 Style & quality requirements:
                 - Add a Candidate Headline (up to 8 words) directly beneath the candidate’s name and contact details.
                 - Summarise profession, specialism, and/or career focus.
-                - Align with the {$style_adjective} and (if available) {job_description}.
+                - Align with the {$style_adjective} and (if available) {$job_description}.
                 - Optimise for ATS keyword matching.
                 - Reflect the {$style_adjective} throughout.
                 - Use active voice, strong verbs, and quantify achievements where possible.
