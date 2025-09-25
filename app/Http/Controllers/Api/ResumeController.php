@@ -376,11 +376,23 @@ class ResumeController extends Controller
 
         try {
             $apiKey = config('services.openai.api_key');
+            $style_adjective = "Friendly";
         
             // Construct detailed evaluation prompt based on the framework
             $prompt = <<<PROMPT
-                You are a resume parsing AI. Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
+                You are an expert UK CV writer, ATS specialist, and resume parsing AI.
                 
+                You will receive:
+                - A candidate’s CV (raw text).
+                - A style adjective (e.g., Professional, Creative, Analytical, Friendly, Results-Driven, Strategic, Technical, Collaborative, Entrepreneurial).
+                - (Optional) A job description (JD).
+                
+                Your tasks are:
+                
+                1. **Parse the CV**  
+                Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
+                
+
                 ### RAW TEXT:
                 "{$cleanOutput}"
                 
@@ -516,6 +528,34 @@ class ResumeController extends Controller
                 - Respond ONLY with JSON — no extra commentary.
                 - Leave fields as `null` if the value is unknown or not found.
                 - Ensure `rawText` contains the same original content provided.
+
+                ---
+
+                2. **Transform into ATS-friendly UK CV**  
+                After parsing, transform the CV into a tailored, ATS-friendly UK CV text aligned with the provided style adjective and, if available, the job description.  
+                
+                Strict ATS formatting rules:
+                - Plain text only (no tables, columns, text boxes, graphics, emojis, or icons).
+                - Standard headings only: Candidate Headline, Profile, Key Skills, Experience, Education, Certifications (if present), Projects (if present), Additional (if present).
+                - Reverse-chronological order.
+                - Bullet points for responsibilities/achievements.
+                - UK spelling and date formats (e.g., Mar 2023 – Jul 2025).
+                - Consistent tense and formatting.
+                
+                Style & quality requirements:
+                - Add a Candidate Headline (up to 8 words) directly beneath the candidate’s name and contact details.
+                - Summarise profession, specialism, and/or career focus.
+                - Align with the {$style_adjective} and (if available) {job_description}.
+                - Optimise for ATS keyword matching.
+                - Reflect the {$style_adjective} throughout.
+                - Use active voice, strong verbs, and quantify achievements where possible.
+                - Preserve factual details (names, dates, employers). Do not invent.
+                - If JD provided, emphasise relevant experience/skills and insert [Placeholder: …] for missing requirements.
+                - Do not insert optional sections if missing in source.
+                
+                Output:
+                - First, return the JSON structure.
+                - Then, provide the final ATS CV text.
             PROMPT;
 
             $gptResponse = Http::timeout(120)->withHeaders([
@@ -526,7 +566,8 @@ class ResumeController extends Controller
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a professional JSON resume parser. Respond ONLY with valid full JSON.'
+                        'content' => 'You are an expert UK CV writer and employability coach. Always use UK English grammar and 
+spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
                     ],
                     [
                         'role' => 'user',
