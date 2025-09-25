@@ -376,7 +376,8 @@ class ResumeController extends Controller
 
         try {
             $apiKey = config('services.openai.api_key');
-            $style_adjective = "Friendly";
+            $style_adjective = $request->style_adjective ?? "Friendly";
+            $description = $request->job_description ?? "";          
         
             // Construct detailed evaluation prompt based on the framework
             $prompt = <<<PROMPT
@@ -555,8 +556,8 @@ class ResumeController extends Controller
                 
                 Output:
                 - First, return the JSON structure.
-                - Then, provide the final ATS CV text.
-            PROMPT;
+                PROMPT;
+                // - Then, provide the final ATS CV text.
 
             $gptResponse = Http::timeout(120)->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
