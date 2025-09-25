@@ -376,8 +376,8 @@ class ResumeController extends Controller
 
         try {
             $apiKey = config('services.openai.api_key');
-            $style_adjective = $request->style_adjective ?? "Friendly";
-            $description = $request->job_description ?? "";          
+            $style_adjective = $request->languageStyle ?? "Friendly";
+            $description = $request->additionalInfo ?? "";          
         
             // Construct detailed evaluation prompt based on the framework
             $prompt = <<<PROMPT
