@@ -508,7 +508,7 @@ class ResumeController extends Controller
                 ],
                 "totalYearsExperience": null,
                 "project": null,
-                "achievement": null,
+                "achievement": [],
                 "rightToWork": null,
                 "languages": [
                 {
