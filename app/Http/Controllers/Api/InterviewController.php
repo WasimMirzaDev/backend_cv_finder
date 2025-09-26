@@ -170,7 +170,7 @@ class InterviewController extends Controller
 
     // Send audio to Whisper for transcription
     try {
-        $response = Http::timeout(120)->withToken(config('services.openai.api_key'))
+        $response = Http::timeout(60)->withToken(config('services.openai.api_key'))
             ->attach(
                 'file',
                 fopen($fullPath, 'r'),
@@ -321,7 +321,7 @@ class InterviewController extends Controller
         Respond ONLY with valid JSON.
         PROMPT;
         
-            $gptResponse = Http::timeout(120)->withHeaders([
+            $gptResponse = Http::timeout(60)->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/chat/completions', [
