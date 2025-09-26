@@ -575,7 +575,6 @@ private function extractTextFromElement($element)
                 Rules:
                 - Respond ONLY with JSON — no extra commentary.
                 - Leave fields as `null` if the value is unknown or not found.
-                - Ensure `rawText` contains the same original content provided.
 
                 ---
 
@@ -604,9 +603,7 @@ private function extractTextFromElement($element)
                 Output:
                 - First, return the JSON structure.
                 PROMPT;
-
-
-                return response()->json($prompt);
+                
                 // - Then, provide the final ATS CV text.
 
             $gptResponse = Http::timeout(120)->withHeaders([
@@ -618,7 +615,7 @@ private function extractTextFromElement($element)
                     [
                         'role' => 'system',
                         'content' => 'You are an expert UK CV writer and employability coach. Always use UK English grammar and 
-spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
+                                spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
                     ],
                     [
                         'role' => 'user',
