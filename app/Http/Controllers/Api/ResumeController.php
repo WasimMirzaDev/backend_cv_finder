@@ -723,7 +723,7 @@ private function extractTextFromElement($element)
             $assistantMessage = collect($messages)->firstWhere('role', 'assistant');
             $evaluation = $assistantMessage['content'][0]['text']['value'] ?? null;
                         
-            return response()->json($evaluation);
+            // return response()->json($evaluation);
         
             // $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
             $parsedData = json_decode($evaluation, true);
