@@ -347,18 +347,70 @@ class ResumeController extends Controller
             // Handle DOCX files using PhpOffice\PhpWord
             try {
                 $phpWord = \PhpOffice\PhpWord\IOFactory::load($path);
+                
+                // Debug: Check if file was loaded
+                if (!$phpWord) {
+                    return response()->json(['error' => 'Failed to load DOCX file'], 500);
+                }
+            
                 $text = '';
-                foreach ($phpWord->getSections() as $section) {
-                    foreach ($section->getElements() as $element) {
+                $sections = $phpWord->getSections();
+                
+                // Debug: Check if sections exist
+                if (empty($sections)) {
+                    return response()->json(['error' => 'No sections found in the document'], 400);
+                }
+            
+                foreach ($sections as $section) {
+                    $elements = $section->getElements();
+                    
+                    // Debug: Check elements in section
+                    if (empty($elements)) {
+                        \Log::warning('No elements found in section', ['section' => $section]);
+                        continue;
+                    }
+            
+                    foreach ($elements as $element) {
                         if (method_exists($element, 'getText')) {
-                            $text .= $element->getText() . "\n";
+                            $elementText = $element->getText();
+                            \Log::info('Element text', ['text' => $elementText, 'class' => get_class($element)]);
+                            $text .= $elementText . "\n";
+                        } else {
+                            \Log::info('Element has no getText method', ['class' => get_class($element)]);
                         }
                     }
                 }
+            
                 $cleanOutput = mb_convert_encoding(trim($text), 'UTF-8', 'UTF-8');
-                return response()->json(['success' => true, 'data' => $cleanOutput]);
+                
+                // Debug: Check final output
+                if (empty($cleanOutput)) {
+                    \Log::warning('Empty output after processing', [
+                        'original_text' => $text,
+                        'file_size' => filesize($path),
+                        'file_mime' => mime_content_type($path)
+                    ]);
+                }
+            
+                return response()->json([
+                    'success' => true,
+                    'data' => $cleanOutput,
+                    'debug' => [
+                        'original_length' => strlen($text),
+                        'clean_length' => strlen($cleanOutput),
+                        'sections_count' => count($sections)
+                    ]
+                ]);
+            
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to parse DOCX file', 'details' => $e->getMessage()], 500);
+                \Log::error('DOCX parsing error', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return response()->json([
+                    'error' => 'Failed to parse DOCX file',
+                    'details' => $e->getMessage()
+                ], 500);
             }
         } else {
             // Handle PDF and images with Python script
