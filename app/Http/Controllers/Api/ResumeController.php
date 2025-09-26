@@ -601,6 +601,7 @@ spelling. Produce output that is ATS-friendly for UK recruitment.Only return val
                             $pdfParsed->full_name = $decoded['data']['candidateName'][0]['firstName'] . ' ' . $decoded['data']['candidateName'][0]['familyName'];
                         }
                         $pdfParsed->file_name = $originalName;
+                        $decoded['data']['languageStyle'] = $style_adjective;
                         $pdfParsed->parsed_data = $decoded;
                         $pdfParsed->save();
 
