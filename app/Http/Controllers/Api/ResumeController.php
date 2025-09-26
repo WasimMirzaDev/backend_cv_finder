@@ -394,7 +394,6 @@ private function extractTextFromElement($element)
                 }
                 
                 $cleanOutput = mb_convert_encoding(trim($text), 'UTF-8', 'UTF-8');
-                return response()->json(['success' => true, 'data' => $cleanOutput]);
                 
             } catch (\Exception $e) {
                 \Log::error('Error processing DOCX file', [
