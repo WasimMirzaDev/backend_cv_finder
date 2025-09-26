@@ -356,6 +356,7 @@ EOT;
         $headline = $request->input('headline');
         $summary = $request->input('summary');
         $workExperience = $request->input('workExperience'); // array of strings
+        $style = $request->input('languageStyle') ?? 'Professional';
         $apiKey = config('services.openai.api_key');
     
         try {
@@ -367,11 +368,12 @@ EOT;
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a professional CV/resume analyzer. Analyze each section of the resume and provide issues + improvements.'
+                        'content' => 'You are an expert UK CV analyzer and employability coach. Always use UK English grammar and 
+                                    spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json. Analyze each section of the resume and provide issues + improvements.'
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Analyze the following resume sections:\n\n" .
+                        'content' => "ATS-friendly UK CV text aligned with the provided style adjective: {$style} \n\n Analyze the following resume sections:\n\n" .
                                      "Headline: {$headline}\n\n" .
                                      "Summary: {$summary}\n\n" .
                                      "Work Experience: " . implode("\n- ", $workExperience) . "\n\n" .

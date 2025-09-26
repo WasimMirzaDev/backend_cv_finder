@@ -546,9 +546,9 @@ class ResumeController extends Controller
                 Style & quality requirements:
                 - Add a Candidate Headline (up to 8 words) directly beneath the candidate’s name and contact details.
                 - Summarise profession, specialism, and/or career focus.
-                - Align with the {$style_adjective} and (if available) {$job_description}.
+                - Align with the {$style_adjective} style and (if available) {$job_description}.
                 - Optimise for ATS keyword matching.
-                - Reflect the {$style_adjective} throughout.
+                - Reflect the {$style_adjective} style throughout.
                 - Use active voice, strong verbs, and quantify achievements where possible.
                 - Preserve factual details (names, dates, employers). Do not invent.
                 - If JD provided, emphasise relevant experience/skills and insert [Placeholder: …] for missing requirements.
