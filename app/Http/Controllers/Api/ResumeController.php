@@ -603,32 +603,129 @@ private function extractTextFromElement($element)
                 Output:
                 - First, return the JSON structure.
                 PROMPT;
+
+
+
+            $promptNEW = <<<PROMPT
+                Raw TEXT: {$cleanOutput}
+            PROMPT;
                 
                 // - Then, provide the final ATS CV text.
 
-            $gptResponse = Http::timeout(120)->withHeaders([
+            // $gptResponse = Http::timeout(120)->withHeaders([
+            //     'Authorization' => "Bearer {$apiKey}",
+            //     'Content-Type' => 'application/json',
+            // ])->post('https://api.openai.com/v1/chat/completions', [
+            //     'model' => $model, // Dynamic model selection
+            //     'messages' => [
+            //         [
+            //             'role' => 'system',
+            //             'content' => 'You are an expert UK CV writer and employability coach. Always use UK English grammar and 
+            //                     spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
+            //         ],
+            //         [
+            //             'role' => 'user',
+            //             'content' => $prompt
+            //         ]
+            //     ],
+            //     'temperature' => 0.0, // Minimize randomness
+            //     'response_format' => ['type' => 'json_object'], // Ensure JSON output
+            //     'max_tokens' => 5000, // Allow for detailed evaluation
+            // ]);
+
+
+
+            $assistantId = 'asst_UyHFSPLp3pgH8IkQ1nWkzX6w';
+            
+            // First, create a thread
+            $threadResponse = Http::withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
-            ])->post('https://api.openai.com/v1/chat/completions', [
-                'model' => $model, // Dynamic model selection
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are an expert UK CV writer and employability coach. Always use UK English grammar and 
-                                spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $prompt
-                    ]
-                ],
-                'temperature' => 0.0, // Minimize randomness
-                'response_format' => ['type' => 'json_object'], // Ensure JSON output
-                'max_tokens' => 5000, // Allow for detailed evaluation
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->post('https://api.openai.com/v1/threads');
+            
+            if (!$threadResponse->successful()) {
+                return response()->json(['error' => 'Failed to create thread'], 500);
+            }
+            
+            $threadId = $threadResponse->json()['id'];
+            
+            // Add your message to the thread
+            $messageResponse = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->post("https://api.openai.com/v1/threads/{$threadId}/messages", [
+                'role' => 'user',
+                'content' => $promptNEW
             ]);
-
+            
+            if (!$messageResponse->successful()) {
+                return response()->json(['error' => 'Failed to add message to thread'], 500);
+            }
+            
+            // Run the assistant
+            $runResponse = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->post("https://api.openai.com/v1/threads/{$threadId}/runs", [
+                'assistant_id' => $assistantId
+            ]);
+            
+            if (!$runResponse->successful()) {
+                return response()->json(['error' => 'Failed to run assistant'], 500);
+            }
+            
+            $runId = $runResponse->json()['id'];
+            
+            // Poll for completion
+            $status = '';
+            $maxAttempts = 20;
+            $attempt = 0;
+            
+            do {
+                $runStatus = Http::withHeaders([
+                    'Authorization' => "Bearer {$apiKey}",
+                    'OpenAI-Beta' => 'assistants=v2'
+                ])->get("https://api.openai.com/v1/threads/{$threadId}/runs/{$runId}");
+            
+                if (!$runStatus->successful()) {
+                    return response()->json(['error' => 'Failed to get run status'], 500);
+                }
+            
+                $status = $runStatus->json()['status'];
+                
+                if (in_array($status, ['failed', 'cancelled', 'expired'])) {
+                    return response()->json(['error' => "Assistant run {$status}"], 500);
+                }
+            
+                if ($status !== 'completed') {
+                    $attempt++;
+                    if ($attempt >= $maxAttempts) {
+                        return response()->json(['error' => 'Assistant run timed out'], 500);
+                    }
+                    sleep(2); // Wait 2 seconds before checking again
+                }
+            } while ($status !== 'completed');
+            
+            // Get the assistant's response
+            $messagesResponse = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->get("https://api.openai.com/v1/threads/{$threadId}/messages");
+            
+            if (!$messagesResponse->successful()) {
+                return response()->json(['error' => 'Failed to get assistant response'], 500);
+            }
+            
+            $messages = $messagesResponse->json()['data'];
+            $assistantMessage = collect($messages)->firstWhere('role', 'assistant');
+            $evaluation = $assistantMessage['content'][0]['text']['value'] ?? null;
+                        
+            return response()->json($evaluation);
         
-            $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
+            // $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
             $parsedData = json_decode($evaluation, true);
 
             if (isset($evaluation)) {
