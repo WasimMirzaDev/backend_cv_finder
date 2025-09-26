@@ -604,6 +604,9 @@ private function extractTextFromElement($element)
                 Output:
                 - First, return the JSON structure.
                 PROMPT;
+
+
+                return response()->json($prompt);
                 // - Then, provide the final ATS CV text.
 
             $gptResponse = Http::timeout(120)->withHeaders([
