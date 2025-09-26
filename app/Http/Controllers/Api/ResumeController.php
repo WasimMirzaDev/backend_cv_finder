@@ -328,6 +328,23 @@ class ResumeController extends Controller
         }
     }
 
+    /**
+ * Helper method to extract text from any element
+ */
+private function extractTextFromElement($element)
+{
+    $text = '';
+    
+    if (method_exists($element, 'getElements')) {
+        foreach ($element->getElements() as $child) {
+            $text .= $this->extractTextFromElement($child);
+        }
+    } elseif (method_exists($element, 'getText')) {
+        $text .= $element->getText();
+    }
+    
+    return $text;
+}
 
     public function parseResumeOCRPyScript(Request $request)
     {
