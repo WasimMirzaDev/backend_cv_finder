@@ -350,7 +350,15 @@ class ResumeController extends Controller
                 $text = '';
                 foreach ($phpWord->getSections() as $section) {
                     foreach ($section->getElements() as $element) {
-                        if (method_exists($element, 'getText')) {
+                        if ($element instanceof \PhpOffice\PhpWord\Element\TextRun) {
+                            // Handle TextRun elements by iterating through their sub-elements
+                            foreach ($element->getElements() as $subElement) {
+                                if (method_exists($subElement, 'getText')) {
+                                    $text .= $subElement->getText() . "\n";
+                                }
+                            }
+                        } elseif (method_exists($element, 'getText')) {
+                            // Handle other elements with getText method
                             $text .= $element->getText() . "\n";
                         }
                     }
