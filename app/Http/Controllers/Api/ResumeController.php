@@ -356,7 +356,7 @@ class ResumeController extends Controller
                     }
                 }
                 $cleanOutput = mb_convert_encoding(trim($text), 'UTF-8', 'UTF-8');
-                return $cleanOutput;
+                return response()->json(['success' => true, 'data' => $cleanOutput]);
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Failed to parse DOCX file', 'details' => $e->getMessage()], 500);
             }
