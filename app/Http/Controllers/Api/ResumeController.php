@@ -348,25 +348,47 @@ class ResumeController extends Controller
             try {
                 $phpWord = \PhpOffice\PhpWord\IOFactory::load($path);
                 $text = '';
+                
                 foreach ($phpWord->getSections() as $section) {
-                    foreach ($section->getElements() as $element) {
+                    $elements = $section->getElements();
+                    
+                    foreach ($elements as $element) {
                         if ($element instanceof \PhpOffice\PhpWord\Element\TextRun) {
-                            // Handle TextRun elements by iterating through their sub-elements
-                            foreach ($element->getElements() as $subElement) {
-                                if (method_exists($subElement, 'getText')) {
-                                    $text .= $subElement->getText() . "\n";
+                            // Handle TextRun elements
+                            foreach ($element->getElements() as $textElement) {
+                                if ($textElement instanceof \PhpOffice\PhpWord\Element\Text) {
+                                    $text .= $textElement->getText();
                                 }
                             }
-                        } elseif (method_exists($element, 'getText')) {
-                            // Handle other elements with getText method
+                            $text .= "\n"; // Add newline after each TextRun
+                        } elseif ($element instanceof \PhpOffice\PhpWord\Element\Text) {
+                            // Handle direct Text elements
                             $text .= $element->getText() . "\n";
+                        } elseif ($element instanceof \PhpOffice\PhpWord\Element\Table) {
+                            // Handle tables
+                            foreach ($element->getRows() as $row) {
+                                foreach ($row->getCells() as $cell) {
+                                    $text .= $this->extractTextFromElement($cell) . "\t";
+                                }
+                                $text .= "\n";
+                            }
                         }
                     }
                 }
+                
                 $cleanOutput = mb_convert_encoding(trim($text), 'UTF-8', 'UTF-8');
                 return response()->json(['success' => true, 'data' => $cleanOutput]);
+                
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to parse DOCX file', 'details' => $e->getMessage()], 500);
+                \Log::error('Error processing DOCX file', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $path
+                ]);
+                return response()->json([
+                    'error' => 'Failed to process DOCX file',
+                    'details' => $e->getMessage()
+                ], 500);
             }
         } else {
             // Handle PDF and images with Python script
