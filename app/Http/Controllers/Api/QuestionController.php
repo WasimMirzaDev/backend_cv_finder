@@ -174,7 +174,7 @@ class QuestionController extends Controller
     {
         // Get 6 random questions
         $questions = Question::inRandomOrder()
-            ->take(6)
+            ->take(1)
             ->get();
         
         return response()->json($questions);
