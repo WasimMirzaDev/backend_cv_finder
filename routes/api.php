@@ -40,6 +40,7 @@ Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-profile', [UserController::class, 'uploadProfile']);
+    Route::post('/profile-settings', [UserController::class, 'ProfileSettings']);
 
     //interview related
     Route::post('/v1/resume/create-empty', [ResumeController::class, 'createEmpty']);

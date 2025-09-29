@@ -55,4 +55,52 @@ class UserController extends Controller
             'user' => $user,
         ]);
     }
+
+    public function ProfileSettings(Request $request){
+        $request->validate([
+            "name" => "sometimes|string|max:100|min:3",
+            "address" => "sometimes|string|max:200",
+            "email" => "sometimes|email|unique:users,email," . auth()->id(),
+            "profile_img" => "sometimes|image|mimes:jpeg,png,jpg,gif|max:2048"
+        ]);
+
+        $user = Auth::user();
+        
+        // Update basic info
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+        
+        if ($request->has('address')) {
+            $user->address = $request->address;
+        }
+        
+        if ($request->has('email') && $request->email !== $user->email) {
+            $user->email = $request->email;
+            // You might want to implement email verification here
+        }
+
+        // Handle profile image upload
+        if ($request->hasFile('profile_img')) {
+            // Delete old profile image if exists
+            if ($user->profile_img) {
+                $oldImagePath = public_path('storage/' . $user->profile_img);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+            
+            // Store new image
+            $imagePath = $request->file('profile_img')->store('profile_images', 'public');
+            $user->profile_img = $imagePath;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Profile updated successfully',
+            'user' => $user->fresh()
+        ]);
+}
 }
