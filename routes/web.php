@@ -22,3 +22,14 @@ Route::get('/optimize-clear', function () {
     \Illuminate\Support\Facades\Artisan::call('optimize:clear');
     return "Optimize Clear Complete!";
 });
+
+Route::get('/storage-link', function () {
+    if (file_exists(public_path('storage'))) {
+        return 'Storage link already exists!';
+    }
+    
+    \Illuminate\Support\Facades\Artisan::call('storage:link');
+    return 'Storage link created successfully!';
+});
+
+

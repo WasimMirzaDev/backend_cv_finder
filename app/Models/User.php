@@ -46,7 +46,7 @@ class User extends Authenticatable
     ];
 
 
-    protected $appends = ['preferred_industry', 'role', 'education_level', 'preferred_industry_type'];
+    protected $appends = ['preferred_industry', 'role', 'education_level', 'preferred_industry_type' , 'profile_img_url'];
 
     public function getPreferredIndustryAttribute()
     {
@@ -67,6 +67,26 @@ class User extends Authenticatable
     public function getEducationLevelAttribute()
     {
         return $this->education_level_id ? EducationLevel::find($this->education_level_id) : null;
+    }
+
+    /**
+     * Get the full URL for the user's profile image.
+     *
+     * @return string|null
+     */
+    public function getProfileImgUrlAttribute()
+    {
+        if (!$this->profile_img) {
+            return null;
+        }
+
+        // Check if the URL is already a full URL
+        if (filter_var($this->profile_img, FILTER_VALIDATE_URL)) {
+            return $this->profile_img;
+        }
+
+        // Generate the full URL for stored files
+        return asset('storage/' . ltrim($this->profile_img, '/'));
     }
 
     /**
