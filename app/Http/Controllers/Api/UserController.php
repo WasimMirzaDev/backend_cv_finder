@@ -82,17 +82,28 @@ class UserController extends Controller
 
         // Handle profile image upload
         if ($request->hasFile('profile_img')) {
+            // Create profiles directory if it doesn't exist
+            $publicPath = public_path('profiles');
+            if (!file_exists($publicPath)) {
+                mkdir($publicPath, 0777, true);
+            }
+            
             // Delete old profile image if exists
             if ($user->profile_img) {
-                $oldImagePath = public_path('storage/' . $user->profile_img);
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
+                $oldImagePath = public_path($user->profile_img);
+                if (file_exists($oldImagePath) && strpos($oldImagePath, '/profiles/') !== false) {
+                    @unlink($oldImagePath);
                 }
             }
             
-            // Store new image
-            $imagePath = $request->file('profile_img')->store('profile_images', 'public');
-            $user->profile_img = $imagePath;
+            // Generate unique filename
+            $filename = 'profile_' . time() . '.' . $request->file('profile_img')->getClientOriginalExtension();
+            
+            // Move the file to public/profiles
+            $request->file('profile_img')->move($publicPath, $filename);
+            
+            // Store the relative path
+            $user->profile_img = '/profiles/' . $filename;
         }
 
         $user->save();
