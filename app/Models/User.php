@@ -85,8 +85,8 @@ class User extends Authenticatable
             return $this->profile_img;
         }
 
-        // Generate the full URL for stored files
-        return asset('storage/' . ltrim($this->profile_img, '/'));
+        // Return the full URL for files in public/profiles
+        return asset(ltrim($this->profile_img, '/'));
     }
 
     /**
