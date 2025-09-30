@@ -253,4 +253,65 @@ class JobController extends Controller
             ], 500);
         }
     }
+/**
+ * Update the specified job application.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $id
+ * @return \Illuminate\Http\JsonResponse
+ */
+   public function updateAppliedJob(Request $request, $id)
+   {
+    try {
+        $validated = $request->validate([
+            'cv_created' => 'sometimes|boolean',
+            'interview_practice' => 'sometimes|boolean',
+            'applied' => 'sometimes|boolean',
+            'status' => 'sometimes|in:prep,appSent,shortListed,1stInterview,2ndInterview,finalInterview,onHold,OfferAcctepted,UnSuccessful'
+        ]);
+
+        $application = JobApplication::where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        // Only update the fields that are present in the request
+        $updatableFields = [
+            'cv_created',
+            'interview_practice',
+            'applied',
+            'status'
+        ];
+
+        foreach ($updatableFields as $field) {
+            if ($request->has($field)) {
+                $application->$field = $validated[$field];
+            }
+        }
+
+        $application->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $application,
+            'message' => 'Job application updated successfully'
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation error',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Job application not found'
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update job application',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+   }
 }
