@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use App\Models\JobApplication;
 
 class JobController extends Controller
 {
@@ -161,6 +163,57 @@ class JobController extends Controller
             return response()->json(['error' => 'Failed to fetch jobs from external API.'], $response->status());
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Apply for a job
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function applyJob(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'job' => 'required|array',
+                'title' => 'required|string|max:255',
+                'company' => 'required|string|max:255',
+                'cv_created' => 'sometimes|boolean',
+                'interview_practice' => 'sometimes|boolean',
+                'applied' => 'sometimes|boolean',
+                'status' => 'sometimes|in:prep,appSent,shortListed,1stInterview,2ndInterview,finalInterview,onHold,OfferAcctepted,UnSuccessful'
+            ]);
+
+            // Create a new application
+            $application = JobApplication::create([
+                'job' => $validated['job'],
+                'title' => $validated['title'],
+                'company' => $validated['company'],
+                'cv_created' => $validated['cv_created'] ?? false,
+                'interview_practice' => $validated['interview_practice'] ?? false,
+                'applied' => $validated['applied'] ?? false,
+                'status' => $validated['status'] ?? 'prep',
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $application
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create job application',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
