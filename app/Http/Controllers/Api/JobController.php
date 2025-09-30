@@ -216,4 +216,41 @@ class JobController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get authenticated user's job applications
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function appliedJobs(Request $request)
+    {
+        try {
+            $limit = $request->input('limit', 6);
+            
+            $jobs = JobApplication::where('user_id', Auth::id())
+                ->latest()
+                ->paginate($limit);
+
+            return response()->json([
+                'success' => true,
+                'data' => $jobs->items(),
+                'pagination' => [
+                    'total' => $jobs->total(),
+                    'per_page' => $jobs->perPage(),
+                    'current_page' => $jobs->currentPage(),
+                    'last_page' => $jobs->lastPage(),
+                    'from' => $jobs->firstItem(),
+                    'to' => $jobs->lastItem(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch job applications',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
