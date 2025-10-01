@@ -427,22 +427,55 @@ private function extractTextFromElement($element)
             $job_description = $request->additionalInfo ?? "";          
         
             // Construct detailed evaluation prompt based on the framework
-            $prompt = <<<PROMPT
-                You are an expert UK CV writer, ATS specialist, and resume parsing AI.
+            $Systemprompt = <<<PROMPT
+                ROLE
+                - You read the raw CV text from the user.
+                - You analyze the contents and elaborate / expand where this may be lacking
+                - You output ONE valid JSON object conforming to the SCHEMA below.
+                - You enrich the CV to be recruiter-friendly and evidence-anchored without inventing data.
                 
-                You will receive:
-                - A candidate’s CV (raw text).
-                - A style adjective (e.g., Professional, Creative, Analytical, Friendly, Results-Driven, Strategic, Technical, Collaborative, Entrepreneurial).
-                - (Optional) A job description (JD).
+                CORE RULES
+                1) Output JSON only — no extra text.
+                2) Preserve all stated facts (names, dates, metrics, employers).
+                3) Never invent new numbers, employers, degrees, or certifications.
+                4) If >40% of a summary or bullet is generalized wording, set "confidence":"inferred"; otherwise "stated".
+                5) Use {$style_adjective} language style.---
+                6) UK spelling and date formats (e.g., Mar 2023 – Jul 2025).
+                7) Consistent tense and formatting.
                 
-                Your tasks are:
+                SUMMARY
+                - Produce ONE cohesive paragraph (80–130 words).
+                - Use strong verbs (Led, Built, Designed, Delivered, Optimized).
+                - Cover, where relevant: technical/domain scope, scalability/performance, collaboration/leadership, quality/security/UX.
+                - Reuse stated metrics verbatim (e.g. “improved performance by 30%”).
+                - No fabricated metrics.
+
+                BULLET DECOMPOSITION (REINFORCED)
+                - Every experience entry MUST have *3–7 bullets*. Fewer than 3 is INVALID.
+                - If duties appear as a single sentence, *DECOMPOSE* into discrete bullets that each cover one facet:
+                  (a) what was built/delivered,
+                  (b) integrations/security,
+                  (c) performance/scalability (reuse stated metrics),
+                  (d) collaboration/leadership/delivery,
+                  (e) quality/testing/reliability,
+                  (f) architecture/tooling.
+                - Each bullet is *one concise ATS-friendly sentence* and starts with a strong verb.
+                - Avoid combining multiple facets into one bullet.
+                - For generic expansions, set "confidence":"inferred".
                 
-                1. **Parse the CV**  
+                BULLET DECOMPOSITION EXAMPLES
+                SOURCE:
+                "Developed REST APIs, integrated third-party services, and managed databases with focus on optimisation and scalability."
+                TARGET:
+                - Designed and developed RESTful APIs powering customer-facing web and mobile applications. (inferred)
+                - Integrated third-party services with secure, reliable data exchange and webhook handling. (inferred)
+                - Optimized queries and caching to improve average API response time by ~35% where measured. (stated if present)
+                - Implemented asynchronous jobs and queues to maintain responsiveness under heavy load. (inferred)
+                - Collaborated with product and QA to deliver production-ready features on predictable timelines. (inferred)
+                                
+                **Parse the CV**  
                 Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
                 
-
-                ### RAW TEXT:
-                "{$cleanOutput}"
                 
                 ### REQUIRED JSON FORMAT:
                 {
@@ -493,7 +526,11 @@ private function extractTextFromElement($element)
                 "apartmentNumber": null
                 },
                 "availability": null,
-                "summary": "",
+                "summary": {
+                    "paragraph": "",
+                    "years_experience": null,
+                    "confidence": "stated"
+                },
                 "expectedSalary": null,
                 "education": [
                 {
@@ -545,7 +582,17 @@ private function extractTextFromElement($element)
                   },
                   "durationInMonths": null
                 },
-                "workExperienceDescription": "",
+                "highlights": {
+                "minItems": 3,
+                "maxItems": 7,
+                "items":  [{
+                    "bullet": {"type":"string"},
+                    "impact": {"type":["string","null"]},
+                    "keywords": {"type":"array","items":{"type":"string"}},
+                    "confidence": {"type":"string","enum":["stated","inferred"]}
+                  },
+                  ],
+                },
                 "workExperienceType": {
                   "id": null,
                   "label": "",
@@ -575,34 +622,35 @@ private function extractTextFromElement($element)
                 Rules:
                 - Respond ONLY with JSON — no extra commentary.
                 - Leave fields as `null` if the value is unknown or not found.
-
-                ---
-
-                2. **Transform into ATS-friendly UK CV**  
-                After parsing, transform the CV into a tailored, ATS-friendly UK CV text aligned with the provided style adjective and, if available, the job description.  
                 
-                Strict ATS formatting rules:
-                - Plain text only (no tables, columns, text boxes, graphics, emojis, or icons).
-                - Standard headings only: Candidate Headline, Profile, Key Skills, Experience, Education, Certifications (if present), Projects (if present), Additional (if present).
-                - Reverse-chronological order.
-                - Bullet points for responsibilities/achievements.
-                - UK spelling and date formats (e.g., Mar 2023 – Jul 2025).
-                - Consistent tense and formatting.
-                
-                Style & quality requirements:
-                - Add a Candidate Headline (up to 8 words) directly beneath the candidate’s name and contact details.
-                - Summarise profession, specialism, and/or career focus.
-                - Align with the {$style_adjective} style and (if available) {$job_description}.
-                - Optimise for ATS keyword matching.
-                - Reflect the {$style_adjective} style throughout.
-                - Use active voice, strong verbs, and quantify achievements where possible.
-                - Preserve factual details (names, dates, employers). Do not invent.
-                - If JD provided, emphasise relevant experience/skills and insert [Placeholder: …] for missing requirements.
-                - Do not insert optional sections if missing in source.
-                
-                Output:
-                - First, return the JSON structure.
                 PROMPT;
+
+
+                // **Transform into ATS-friendly UK CV**  
+                // After parsing, transform the CV into a tailored, ATS-friendly UK CV text aligned with the provided style adjective and, if available, the job description.  
+                
+                // Strict ATS formatting rules:
+                // - Plain text only (no tables, columns, text boxes, graphics, emojis, or icons).
+                // - Standard headings only: Candidate Headline, Profile, Key Skills, Experience, Education, Certifications (if present), Projects (if present), Additional (if present).
+                // - Reverse-chronological order.
+                // - Bullet points for responsibilities/achievements.
+                // - UK spelling and date formats (e.g., Mar 2023 – Jul 2025).
+                // - Consistent tense and formatting.
+                
+                // Style & quality requirements:
+                // - Add a Candidate Headline (up to 8 words) directly beneath the candidate’s name and contact details.
+                // - Summarise profession, specialism, and/or career focus.
+                // - Align with the {$style_adjective} style and (if available) {$job_description}.
+                // - Optimise for ATS keyword matching.
+                // - Reflect the {$style_adjective} style throughout.
+                // - Use active voice, strong verbs, and quantify achievements where possible.
+                // - Preserve factual details (names, dates, employers). Do not invent.
+                // - If JD provided, emphasise relevant experience/skills and insert [Placeholder: …] for missing requirements.
+                // - Do not insert optional sections if missing in source.
+                
+                // Output:
+                // - First, return the JSON structure.
+              
                 
                 // - Then, provide the final ATS CV text.
 
@@ -614,12 +662,11 @@ private function extractTextFromElement($element)
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are an expert UK CV writer and employability coach. Always use UK English grammar and 
-                                spelling. Produce output that is ATS-friendly for UK recruitment.Only return valid json.'
+                        'content' => $Systemprompt
                     ],
                     [
                         'role' => 'user',
-                        'content' => $prompt
+                        'content' => "Raw Text : {$cleanOutput}"
                     ]
                 ],
                 'temperature' => 0.0, // Minimize randomness
