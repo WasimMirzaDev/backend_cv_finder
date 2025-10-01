@@ -582,7 +582,7 @@ private function extractTextFromElement($element)
                   },
                   "durationInMonths": null
                 },
-                "workExperienceDescription": null,
+                "workExperienceDescription": "",
                 "highlights": {
                 "minItems": 3,
                 "maxItems": 7,
