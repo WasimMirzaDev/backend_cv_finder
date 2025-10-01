@@ -659,7 +659,7 @@ private function extractTextFromElement($element)
                 
                 // - Then, provide the final ATS CV text.
 
-            $gptResponse = Http::timeout(120)->withHeaders([
+            $gptResponse = Http::timeout(180)->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/chat/completions', [
