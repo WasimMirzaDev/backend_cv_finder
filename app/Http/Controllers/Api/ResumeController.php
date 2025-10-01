@@ -591,10 +591,10 @@ private function extractTextFromElement($element)
                 "minItems": 3,
                 "maxItems": 7,
                 "items":  [{
-                    "bullet": {"type":"string"},
-                    "impact": {"type":["string","null"]},
-                    "keywords": {"type":"array","items":{"type":"string"}},
-                    "confidence": {"type":"string","enum":["stated","inferred"]}
+                    "bullet": "",
+                    "impact": "",
+                    "keywords": "",
+                    "confidence": ""
                   },
                   ],
                 },
