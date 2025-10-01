@@ -449,6 +449,9 @@ private function extractTextFromElement($element)
                 - Cover, where relevant: technical/domain scope, scalability/performance, collaboration/leadership, quality/security/UX.
                 - Reuse stated metrics verbatim (e.g. “improved performance by 30%”).
                 - No fabricated metrics.
+
+                WorkExperience
+                - workExperienceDescription Should be atleast (100–150 words).
                 
 
                 BULLET DECOMPOSITION (REINFORCED)
