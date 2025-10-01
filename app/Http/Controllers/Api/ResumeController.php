@@ -449,13 +449,7 @@ private function extractTextFromElement($element)
                 - Cover, where relevant: technical/domain scope, scalability/performance, collaboration/leadership, quality/security/UX.
                 - Reuse stated metrics verbatim (e.g. “improved performance by 30%”).
                 - No fabricated metrics.
-
-                EXPERIENCE DESCRIPTION 
-                - Produce ONE cohesive paragraph (80–130 words).
-                - Use strong verbs (Led, Built, Designed, Delivered, Optimized).
-                - Cover, where relevant: technical/domain scope, scalability/performance, collaboration/leadership, quality/security/UX.
-                - Reuse stated metrics verbatim (e.g. “improved performance by 30%”).
-                - No fabricated metrics.
+                
 
                 BULLET DECOMPOSITION (REINFORCED)
                 - Every experience entry MUST have *3–7 bullets*. Fewer than 3 is INVALID.
