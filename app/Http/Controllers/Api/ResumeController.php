@@ -126,56 +126,79 @@ class ResumeController extends Controller
      * Remove the specified resource from storage.
      */
     public function delete(string $id)
-    {
-        $resume = CvResume::findOrFail($id);
-        if($resume->user_id == Auth::user()->id){
-        $resume->delete();
-        }
-        else{
-            $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
-            ->where('type','resume')
-            ->with(['resume', 'interview'])
-            ->latest()
-            ->take($request->limit ?? 3)
+{
+    $resume = CvResume::findOrFail($id);
+    if($resume->user_id != Auth::user()->id) {
+        // Return paginated response for unauthorized delete
+        $perPage = request()->per_page ?? 5;
+        $page = request()->page ?? 1;
+        
+        $query = CvRecentActivity::where('user_id', Auth::user()->id)
+            ->where('type', 'resume')
+            ->with(['resume', 'interview']);
+        
+        $total = $query->count();
+        $recentActivities = $query->latest()
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
             ->get()
             ->map(function ($activity) {
                 $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
                 return $activity;
             });
-            return response()->json([
-                'success' => true,
-                'message' => 'Cannot delete this resume.',
-                'data' => $recentActivities
-            ],403);
-        }
+            
+        return response()->json([
+            'success' => false,
+            'message' => 'Cannot delete this resume.',
+            'data' => [
+                'data' => $recentActivities,
+                'total' => $total,
+                'per_page' => (int)$perPage,
+                'current_page' => (int)$page,
+                'last_page' => ceil($total / $perPage)
+            ]
+        ], 403);
+    }
 
-        $recentActivity = CvRecentActivity::where('user_id', Auth::user()->id)
+    // Delete the resume
+    $resume->delete();
+
+    // Delete the related activity
+    CvRecentActivity::where('user_id', Auth::user()->id)
         ->where('type_id', $id)
-        ->where('type','resume')
-        ->with(['resume', 'interview'])
-        ->first();
+        ->where('type', 'resume')
+        ->delete();
 
-        $recentActivity->delete();
-
-
-        $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
-        ->where('type','resume')
-        ->with(['resume', 'interview'])
-        ->latest()
-        ->take($request->limit ?? 3)
+    // Return paginated recent activities
+    $perPage = request()->per_page ?? 5;
+    $page = request()->page ?? 1;
+    
+    $query = CvRecentActivity::where('user_id', Auth::user()->id)
+        ->where('type', 'resume')
+        ->with(['resume', 'interview']);
+    
+    $total = $query->count();
+    $recentActivities = $query->latest()
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
         ->get()
         ->map(function ($activity) {
             $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
             return $activity;
         });
 
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resume deleted successfully',
-            'data' => $recentActivities
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'message' => 'Resume deleted successfully',
+        'data' => [
+            'data' => $recentActivities,
+            'total' => $total,
+            'per_page' => (int)$perPage,
+            'current_page' => (int)$page,
+            'last_page' => ceil($total / $perPage)
+        ]
+    ]);
+}
 
     /**
      * Upload and parse a resume using Affinda API
