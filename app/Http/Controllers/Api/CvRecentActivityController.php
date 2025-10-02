@@ -27,18 +27,30 @@ class CvRecentActivityController extends Controller
 
     public function recentCreatedCv(Request $request)
     {
-        $recentActivities = CvRecentActivity::where('user_id', Auth::user()->id)
-            ->where('type','resume')
-            ->with(['resume', 'interview'])
-            ->latest()
-            ->take($request->limit ?? 3)
+        $perPage = $request->per_page ?? 10; // Default to 10 items per page
+        $page = $request->page ?? 1; // Default to first page
+        
+        $query = CvRecentActivity::where('user_id', Auth::user()->id)
+            ->where('type', 'resume')
+            ->with(['resume', 'interview']);
+        
+        $total = $query->count();
+        $recentActivities = $query->latest()
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
             ->get()
             ->map(function ($activity) {
                 $activity->unsetRelation($activity->type === 'interview' ? 'resume' : 'interview');
                 return $activity;
             });
             
-        return response()->json($recentActivities);
+        return response()->json([
+            'data' => $recentActivities,
+            'total' => $total,
+            'per_page' => (int)$perPage,
+            'current_page' => (int)$page,
+            'last_page' => ceil($total / $perPage)
+        ]);
     }
 
     public function completedSteps(Request $request){
