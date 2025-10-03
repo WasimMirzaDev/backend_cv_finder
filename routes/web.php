@@ -33,3 +33,6 @@ Route::get('/storage-link', function () {
 });
 
 
+
+Route::get('/resume/{id}/download', [ResumeController::class, 'download']);
+
