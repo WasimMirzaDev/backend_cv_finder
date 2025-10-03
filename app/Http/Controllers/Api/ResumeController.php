@@ -1136,7 +1136,7 @@ PROMPT;
         $resume = CvResume::findOrFail($id);
 
         // 2. Decode JSON into array
-        $resumeData = json_decode($resume->cv_resumejson, true);
+        $resumeData = $resume->cv_resumejson;
 
         // 3. Pass it to Blade template
         $pdf = Pdf::loadView('resume-template', compact('resumeData'))
