@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\GettingStartedStep;
 
 class ResumeController extends Controller
