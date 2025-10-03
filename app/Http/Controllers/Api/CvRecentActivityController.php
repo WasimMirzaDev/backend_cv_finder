@@ -27,7 +27,7 @@ class CvRecentActivityController extends Controller
 
     public function recentCreatedCv(Request $request)
     {
-        $perPage = $request->per_page ?? 5; // Default to 10 items per page
+        $perPage = $request->per_page ?? 3; // Default to 10 items per page
         $page = $request->page ?? 1; // Default to first page
         
         $query = CvRecentActivity::where('user_id', Auth::user()->id)

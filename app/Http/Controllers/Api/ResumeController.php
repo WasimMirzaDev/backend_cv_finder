@@ -130,7 +130,7 @@ class ResumeController extends Controller
     $resume = CvResume::findOrFail($id);
     if($resume->user_id != Auth::user()->id) {
         // Return paginated response for unauthorized delete
-        $perPage = request()->per_page ?? 5;
+        $perPage = request()->per_page ?? 3;
         $page = request()->page ?? 1;
         
         $query = CvRecentActivity::where('user_id', Auth::user()->id)
