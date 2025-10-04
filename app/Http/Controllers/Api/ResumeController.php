@@ -1130,7 +1130,7 @@ PROMPT;
     // }
 
 
-    public function download($id)
+    public function download($id, Request $request)
     {
         // 1. Get resume record from DB
         $resume = CvResume::findOrFail($id);
