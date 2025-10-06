@@ -35,7 +35,7 @@ class PasswordResetController extends Controller
             ]);
     
             // Send email with reset link
-            $resetUrl = config('app.frontend_url') . "/reset-password?token=" . $token . "&email=" . urlencode($email);
+            $resetUrl = "https://midnightblue-yak-450228.hostingersite.com/update-password?token=" . $token . "&email=" . urlencode($email);
             
             try {
                 Mail::to($email)->send(new PasswordResetMail($resetUrl));
