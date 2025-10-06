@@ -24,6 +24,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        $verification = $this->twilio->sendVerification($request->phone);
         $request->validate([
             'name' => 'required|string|max:100|min:3',
             'phone' => 'required|string|max:40|min:2|unique:users',
@@ -43,9 +44,6 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'sign_up' => true,
         ]);
-
-        $verification = $this->twilio->sendVerification($request->phone);
-
 
 
         return response()->json([
