@@ -314,4 +314,30 @@ class JobController extends Controller
         ], 500);
     }
    }
+
+   public function delete($id)
+   {
+    try {
+        $application = JobApplication::where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        $application->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job application deleted successfully'
+        ]);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Job application not found'
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to delete job application',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+   }
 }

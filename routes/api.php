@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apply-job', [JobController::class, 'applyJob']);
     Route::get('/applied-jobs',[JobController::class, 'appliedJobs']);
     Route::put('/update-applied-app/{id}',[JobController::class,'updateAppliedJob']);
+    Route::delete('/delete-applied-app/{id}',[JobController::class,'deleteAppliedJob']);
 
 
     Route::get('/stripe/create-subscription-session/{planId}', [StripeController::class, 'createSubscriptionSession']);
