@@ -33,10 +33,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Phone verification routes
 Route::post('/send-otp', [PhoneVerificationController::class, 'sendOtp']);
 Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
+
+// Password reset routes
+Route::post('/password/email', [\App\Http\Controllers\Api\Auth\PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/password/reset', [\App\Http\Controllers\Api\Auth\PasswordResetController::class, 'reset']);
+Route::post('/password/validate-token', [\App\Http\Controllers\Api\Auth\PasswordResetController::class, 'validateToken']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload-profile', [UserController::class, 'uploadProfile']);

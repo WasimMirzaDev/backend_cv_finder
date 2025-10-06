@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\PendingUser;
 use App\Models\GettingStartedStep;
-// use App\Services\TwilioService;
+use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {   
 
-    // protected $twilio;
+    protected $twilio;
 
-    // public function __construct(TwilioService $twilio)
-    // {
-    //     $this->twilio = $twilio;
-    // }
+    public function __construct(TwilioService $twilio)
+    {
+        $this->twilio = $twilio;
+    }
 
 
     public function register(Request $request)
@@ -44,15 +44,15 @@ class AuthController extends Controller
             'sign_up' => true,
         ]);
 
-        // $verification = $this->twilio->sendVerification($request->phone);
+        $verification = $this->twilio->sendVerification($request->phone);
 
 
 
         return response()->json([
             'status' => true,
-            // 'verification_required' => true,
+            'verification_required' => true,
             'message' => 'OTP sent successfully.',
-            // 'sid' => $verification->sid,
+            'sid' => $verification->sid,
             'user' => $user,
             'access_token' => $user->createToken('auth_token')->plainTextToken,
             'token_type' => 'Bearer',
