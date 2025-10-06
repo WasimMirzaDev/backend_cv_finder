@@ -48,6 +48,8 @@ return [
         'sid' => env('TWILIO_SID'),
         'token' => env('TWILIO_AUTH_TOKEN'),
         'verify_sid' => env('TWILIO_VERIFY_SID'),
-        'from' => env('TWILIO_FROM'), // Optional: If you're also sending SMS
+        'from' => env('TWILIO_FROM'),
+        'enabled' => env('TWILIO_ENABLED', true),
+        'force_mock' => env('TWILIO_FORCE_MOCK', true),
     ],
 ];
