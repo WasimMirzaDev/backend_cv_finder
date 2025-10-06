@@ -34,42 +34,21 @@ class TwilioService
             if (empty($this->verifySid)) {
                 throw new \RuntimeException('Twilio Verify SID is not configured');
             }
-    
-            // For development/testing or blocked regions
-            if (app()->environment('local', 'testing') || config('services.twilio.force_mock', false)) {
-                \Log::info('Using mock Twilio verification', ['phone' => $phoneNumber]);
-                return (object)[
-                    'sid' => 'VE' . md5($phoneNumber . time()),
-                    'status' => 'pending',
-                    'to' => $phoneNumber,
-                ];
-            }
-    
-            \Log::info('Sending Twilio verification', [
+
+            Log::info('Sending verification', [
                 'to' => $phoneNumber,
                 'verify_sid' => $this->verifySid
             ]);
-    
+
             return $this->client->verify->v2->services($this->verifySid)
                 ->verifications
                 ->create($phoneNumber, "sms");
-    
         } catch (\Exception $e) {
-            \Log::error('Twilio verification error', [
+            Log::error('Twilio verification error', [
                 'error' => $e->getMessage(),
                 'phone' => $phoneNumber,
                 'verify_sid' => $this->verifySid
             ]);
-            
-            // If there's an error, return a mock response in development
-            if (app()->environment('local', 'testing') || config('services.twilio.force_mock', false)) {
-                return (object)[
-                    'sid' => 'VE' . md5($phoneNumber . time()),
-                    'status' => 'pending',
-                    'to' => $phoneNumber,
-                ];
-            }
-            
             throw $e;
         }
     }
