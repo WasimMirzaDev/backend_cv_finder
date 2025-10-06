@@ -50,6 +50,6 @@ return [
         'verify_sid' => env('TWILIO_VERIFY_SID'),
         'from' => env('TWILIO_FROM'),
         'enabled' => env('TWILIO_ENABLED', true),
-        'force_mock' => env('TWILIO_FORCE_MOCK', true),
+        'force_mock' => env('TWILIO_FORCE_MOCK', false),
     ],
 ];
