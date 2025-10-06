@@ -315,7 +315,7 @@ class JobController extends Controller
     }
    }
 
-   public function delete($id)
+   public function deleteAppliedJob($id)
    {
     try {
         $application = JobApplication::where('user_id', Auth::id())
