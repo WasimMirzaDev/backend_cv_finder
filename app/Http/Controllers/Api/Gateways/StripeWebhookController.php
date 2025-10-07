@@ -11,6 +11,8 @@ use Carbon\Carbon;
 use App\Models\Subscription;
 use App\Models\Payment;
 use App\Models\Plan;
+use App\Mail\SubscriptionWelcomeMail;
+use Illuminate\Support\Facades\Mail;
 
 class StripeWebhookController extends Controller
 {
@@ -128,13 +130,21 @@ class StripeWebhookController extends Controller
                     'sub_id' => $subscription->id,
                     'status' => $subscription->status
                 ]);
-    
-    
+
+                
                     $user->plan_id = $plan->id;
                     $user->save();
+                    
+                    // Send welcome email
+                    try {
+                        Mail::to($user->email)->send(new SubscriptionWelcomeMail($user, $plan));
+                    } catch (\Exception $e) {
+                        // Log the error but don't fail the webhook
+                        Log::error('Failed to send welcome email: ' . $e->getMessage());
+                    }
+                    
                     \DB::commit();
-    
-    
+
                 break;
                 
                     
