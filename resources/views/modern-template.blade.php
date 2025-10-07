@@ -1,143 +1,85 @@
+<!-- resume-template.blade.php -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $resumeData['candidateName'][0]['firstName'] ?? '' }} {{ $resumeData['candidateName'][0]['familyName'] ?? '' }} - Resume</title>
+    <title>CV - {{ $resumeData['candidateName'][0]['firstName'] }} {{ $resumeData['candidateName'][0]['familyName'] }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            font-size: 13px;
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
             margin: 0;
-            padding: 40px;
-            color: #333;
+            padding: 0;
+            background-color: #fff;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
+        .container {
+            width: 100%;
+            display: table;
         }
-        .name {
-            font-size: 26px;
-            font-weight: bold;
+        .sidebar {
+            width: 35%;
+            float: left;
+            background-color: #8B4444;
+            color: white;
+            padding: 20px;
+            height: 100%;
         }
-        .headline {
-            font-size: 14px;
-            margin-top: 5px;
+        .content {
+            width: 65%;
+            float: left;
+            padding: 20px;
+            background-color: #f9f9f9;
         }
-        .contact {
-            margin-top: 10px;
-        }
-        .section {
-            margin-top: 25px;
+        h1, h2 {
+            color: #2C5F9E;
         }
         .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            border-bottom: 1px solid #aaa;
-            padding-bottom: 3px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        .entry {
+            border-bottom: 1px solid #2C5F9E;
             margin-bottom: 10px;
-        }
-        .entry-title {
-            font-weight: bold;
-        }
-        ul {
-            padding-left: 18px;
-            margin: 5px 0;
-        }
-        li {
-            margin-bottom: 3px;
+            padding-bottom: 5px;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>{{ $resumeData['candidateName'][0]['firstName'] }} {{ $resumeData['candidateName'][0]['familyName'] }}</h1>
+            <p>Email: {{ $resumeData['email'][0] }}</p>
+            <p>Phone: {{ $resumeData['phoneNumber'][0]['formattedNumber'] }}</p>
+            <p>Location: {{ $resumeData['location']['city'] }}, {{ $resumeData['location']['country'] }}</p>
 
-    <div class="header">
-        <div class="name">
-            {{ $resumeData['candidateName'][0]['firstName'] ?? '' }} {{ $resumeData['candidateName'][0]['familyName'] ?? '' }}
-        </div>
-        <div class="headline">
-            {{ $resumeData['headline'] ?? '' }}
-        </div>
-        <div class="contact">
-            {{ $resumeData['email'][0] ?? '' }} | 
-            {{ $resumeData['phoneNumber'][0]['formattedNumber'] ?? '' }} | 
-            {{ $resumeData['location']['city'] ?? '' }}, {{ $resumeData['location']['state'] ?? '' }}, {{ $resumeData['location']['country'] ?? '' }}
-        </div>
-    </div>
-
-    @if(!empty($resumeData['summary']['paragraph']))
-    <div class="section">
-        <div class="section-title">Summary</div>
-        <div class="entry">
-            {{ $resumeData['summary']['paragraph'] }}
-        </div>
-    </div>
-    @endif
-
-    @if(!empty($resumeData['skill']))
-    <div class="section">
-        <div class="section-title">Skills</div>
-        <div class="entry">
+            <h2 class="section-title">Languages</h2>
             <ul>
-                @foreach($resumeData['skill'] as $skill)
-                    <li>{{ $skill['name'] }}</li>
+                @foreach ($resumeData['languages'] as $lang)
+                    <li>{{ $lang['name'] }}</li>
                 @endforeach
             </ul>
         </div>
-    </div>
-    @endif
 
-    @if(!empty($resumeData['education']))
-    <div class="section">
-        <div class="section-title">Education</div>
-        @foreach($resumeData['education'] as $edu)
-            <div class="entry">
-                <div class="entry-title">{{ $edu['educationOrganization'] ?? '' }}</div>
-                <div>{{ $edu['educationLevel']['label'] ?? '' }}</div>
-                <div>{{ $edu['educationDates']['start']['date'] ?? '' }} - {{ $edu['educationDates']['end']['date'] ?? '' }}</div>
-            </div>
-        @endforeach
-    </div>
-    @endif
+        <!-- Main content -->
+        <div class="content">
+            <h2 class="section-title">Professional Summary</h2>
+            <p>{{ $resumeData['summary']['paragraph'] }}</p>
 
-    @if(!empty($resumeData['workExperience']))
-    <div class="section">
-        <div class="section-title">Work Experience</div>
-        @foreach($resumeData['workExperience'] as $job)
-            <div class="entry">
-                <div class="entry-title">
-                    {{ $job['workExperienceJobTitle'] ?? '' }} - {{ $job['workExperienceOrganization'] ?? '' }}
-                </div>
-                <div>
-                    {{ $job['workExperienceDates']['start']['date'] ?? '' }} - {{ $job['workExperienceDates']['end']['date'] ?? 'Present' }}
-                </div>
-                <div>{{ $job['workExperienceDescription'] ?? '' }}</div>
-
-                @if(!empty($job['highlights']['items']))
-                    <ul>
-                        @foreach($job['highlights']['items'] as $highlight)
-                            <li>{{ $highlight['bullet'] ?? '' }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        @endforeach
-    </div>
-    @endif
-
-    @if(!empty($resumeData['languages']))
-    <div class="section">
-        <div class="section-title">Languages</div>
-        <ul>
-            @foreach($resumeData['languages'] as $lang)
-                <li>{{ $lang['name'] ?? '' }} — {{ $lang['level'] ?? '' }}</li>
+            <h2 class="section-title">Employment</h2>
+            @foreach ($resumeData['workExperience'] as $job)
+                <h3>{{ $job['workExperienceJobTitle'] }} - {{ $job['workExperienceOrganization'] }}</h3>
+                <p>{{ $job['workExperienceDates']['start']['date'] }} - {{ $job['workExperienceDates']['end']['date'] }}</p>
+                <p>{{ $job['workExperienceDescription'] }}</p>
+                <ul>
+                    @foreach ($job['highlights']['items'] as $highlight)
+                        <li>{{ $highlight['bullet'] }}</li>
+                    @endforeach
+                </ul>
             @endforeach
-        </ul>
-    </div>
-    @endif
 
+            <h2 class="section-title">Education</h2>
+            @foreach ($resumeData['education'] as $edu)
+                <p><strong>{{ $edu['educationLevel']['label'] }}</strong> — {{ $edu['educationOrganization'] }} ({{ $edu['educationDates']['start']['date'] }} - {{ $edu['educationDates']['end']['date'] }})</p>
+            @endforeach
+        </div>
+    </div>
 </body>
 </html>
