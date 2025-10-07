@@ -1134,7 +1134,8 @@ PROMPT;
     {
         // 1. Get resume record from DB
         $resume = CvResume::findOrFail($id);
-        $template = $request->template;
+        $template = strtolower($request->template);
+
         // 2. Decode JSON into array
         $resumeData = $resume->cv_resumejson;
 
