@@ -12,6 +12,7 @@ use App\Models\Subscription;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Mail\SubscriptionWelcomeMail;
+use App\Mail\SubscriptionCancelledMail;
 use Illuminate\Support\Facades\Mail;
 
 class StripeWebhookController extends Controller
@@ -276,6 +277,21 @@ class StripeWebhookController extends Controller
                             $localSubscription->status = 'cancelled';
                             $localSubscription->ends_at = now();
                             $localSubscription->save();
+                            
+                            // Get the plan details
+                            $plan = Plan::find($localSubscription->type_id);
+                            
+                            // Send cancellation email
+                            try {
+                                Mail::to($user->email)->send(new SubscriptionCancelledMail(
+                                    $user, 
+                                    $plan ?? null, 
+                                    now()
+                                ));
+                            } catch (\Exception $e) {
+                                // Log the error but don't fail the webhook
+                                Log::error('Failed to send cancellation email: ' . $e->getMessage());
+                            }
                         }
                     
                         break;
