@@ -18,7 +18,7 @@ class PasswordResetController extends Controller
     {
         try {
             $validated = $request->validate([
-                'email' => 'required|email|exists:users,email'
+                'email' => 'required|email'
             ]);
     
             $token = Str::random(60);

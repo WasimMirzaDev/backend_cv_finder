@@ -1522,5 +1522,4 @@ PROMPT;
         // 4. Download as PDF
         return $pdf->download('resume.pdf');
     }
-    
 }
