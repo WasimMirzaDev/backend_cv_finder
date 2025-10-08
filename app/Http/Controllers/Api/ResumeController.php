@@ -1516,7 +1516,7 @@ PROMPT;
         $resumeData = $resume->cv_resumejson;
 
         // 3. Pass it to Blade template
-        $pdf = Pdf::loadView(`${$template}-template`, compact('resumeData'))
+        $pdf = Pdf::loadView($template.'-template', compact('resumeData'))
                   ->setPaper('a4', 'portrait');
 
         // 4. Download as PDF
