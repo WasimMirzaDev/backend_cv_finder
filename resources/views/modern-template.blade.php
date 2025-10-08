@@ -292,7 +292,6 @@
                             @endforeach
                         </div>
                         @endif
-                        </div>
 
                         <!-- Education -->
                         @if(!empty($resumeData['education']))
@@ -303,23 +302,23 @@
                                 <table width="100%">
                                     <tr>
                                         <td>
-                                            <h3 class="job-title">{{ $education['degree'] ?? 'Degree' }}</h3>
+                                            <h3 class="job-title">{{ $education['educationLevel']['label'] ?? $education['educationAccreditation'] ?? 'Degree' }}</h3>
                                         </td>
                                         <td align="right">
                                             <span class="job-date">
-                                                {{ $education['dateRange']['startDate'] ?? '' }}
-                                                @if(!empty($education['dateRange']['endDate']))
-                                                    - {{ $education['dateRange']['endDate'] }}
-                                                @elseif(empty($education['dateRange']['endDate']) && !empty($education['dateRange']['startDate']))
+                                                {{ $education['educationDates']['start']['date'] ?? '' }}
+                                                @if(!empty($education['educationDates']['end']['date']))
+                                                    - {{ $education['educationDates']['end']['date'] }}
+                                                @elseif(empty($education['educationDates']['end']['date']) && !empty($education['educationDates']['start']['date']))
                                                     - Present
                                                 @endif
                                             </span>
                                         </td>
                                     </tr>
                                 </table>
-                                @if(!empty($education['institution']))
+                                @if(!empty($education['educationOrganization']))
                                 <p class="job-company">
-                                    {{ $education['institution'] }}
+                                    {{ $education['educationOrganization'] }}
                                     @if(!empty($education['location']))
                                         , {{ $education['location'] }}
                                     @endif
@@ -329,7 +328,6 @@
                             @endforeach
                         </div>
                         @endif
-                        </div>
                     </div>
                 </td>
             </tr>
