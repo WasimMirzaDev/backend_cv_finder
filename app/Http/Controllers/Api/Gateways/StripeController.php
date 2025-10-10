@@ -97,6 +97,9 @@ class StripeController extends Controller
                     'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
+                'discounts' => [[
+                    'promotion_code' => 'promo_1SGdvNLXAyXMSXYpRIPNUZ9Y', // your promo code ID from Stripe
+                ]],
                 'subscription_data' => [
                     'metadata' => [
                         'type' => 'subscription',
