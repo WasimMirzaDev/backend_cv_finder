@@ -68,6 +68,7 @@ class StripeController extends Controller
                     'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
+                'allow_promotion_codes' => true,
                 'subscription_data' => [
                     'trial_period_days' => 7,
                     'metadata' => [
@@ -94,6 +95,7 @@ class StripeController extends Controller
                     'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
+                'allow_promotion_codes' => true,
                 'subscription_data' => [
                     'metadata' => [
                         'type' => 'subscription',
