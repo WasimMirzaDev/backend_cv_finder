@@ -68,9 +68,6 @@ class StripeController extends Controller
                     'price' => $plan->stripe_price_id,
                     'quantity' => 1,
                 ]],
-                'discounts' => [[
-                    'promotion_code' => 'promo_1SGdvNLXAyXMSXYpRIPNUZ9Y', // your promo code ID from Stripe
-                ]],
                 'subscription_data' => [
                     'trial_period_days' => 7,
                     'metadata' => [
@@ -96,9 +93,6 @@ class StripeController extends Controller
                 'line_items' => [[
                     'price' => $plan->stripe_price_id,
                     'quantity' => 1,
-                ]],
-                'discounts' => [[
-                    'promotion_code' => 'promo_1SGdvNLXAyXMSXYpRIPNUZ9Y', // your promo code ID from Stripe
                 ]],
                 'subscription_data' => [
                     'metadata' => [
