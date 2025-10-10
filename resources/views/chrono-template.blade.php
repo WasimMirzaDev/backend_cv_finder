@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         body { font-family: Inter, "Times New Roman", serif; font-size: 14px; line-height: 1.2; margin: 0; padding: 0; color: #5a5a5a; background-color: #fff; }
-        .resume { max-width: 8in; margin: 0 auto; padding: 1in; }
+        .resume { max-width: 8in; margin: 0 auto; padding: 0.6in; }
         .name { color: #000; font-size: 24px; font-weight: bold; margin-bottom: 12px; }
         .headline { font-size: 13px; margin-bottom: 15px; font-weight: normal; }
         .section { margin-bottom: 15px; }

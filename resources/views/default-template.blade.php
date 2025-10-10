@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         body { font-family: Inter, Arial, sans-serif; line-height: 1.2; margin: 0; padding: 0; color: #000; }
-        .resume { max-width: 8in; margin: 0 auto; padding: 0in; }
+        .resume { max-width: 8in; margin: 0 auto; padding: 0.6in; }
         .header { margin-bottom: 15px; padding-bottom: 10px; }
         .contact-info { font-size: 14px; margin-bottom: 5px; color: #878787; }
         .section { margin-bottom: 15px; font-size: 14px; }
