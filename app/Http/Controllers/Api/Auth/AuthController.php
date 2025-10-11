@@ -81,4 +81,35 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ]);
     }
+
+
+    public function changeCurrentPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string|min:8',
+            'new_password' => 'required|string|min:8|confirmed|different:current_password',
+        ]);
+    
+        $user = Auth::user();
+    
+        // Check if current password matches
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'The current password is incorrect.'
+            ], 422);
+        }
+    
+        // Update the password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+    
+        // Revoke all tokens (optional: log out all devices)
+        // $user->tokens()->delete();
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Password updated successfully.'
+        ]);
+    }
 }

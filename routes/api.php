@@ -47,6 +47,9 @@ Route::post('/password/reset', [\App\Http\Controllers\Api\Auth\PasswordResetCont
 Route::post('/password/validate-token', [\App\Http\Controllers\Api\Auth\PasswordResetController::class, 'validateToken']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/change-password', [AuthController::class, 'changeCurrentPassword']);
+
+    
     Route::post('/upload-profile', [UserController::class, 'uploadProfile']);
     Route::post('/profile-settings', [UserController::class, 'ProfileSettings']);
 

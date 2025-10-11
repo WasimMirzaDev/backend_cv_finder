@@ -59,9 +59,10 @@ class UserController extends Controller
     public function ProfileSettings(Request $request){
         $request->validate([
             "name" => "sometimes|string|max:100|min:3",
-            "address" => "sometimes|string|max:200",
+            "phone" => "sometimes|string|max:200",
             "email" => "sometimes|email|unique:users,email," . auth()->id(),
-            "profile_img" => "sometimes|image|mimes:jpeg,png,jpg,gif|max:2048"
+            "profile_img" => "sometimes|image|mimes:jpeg,png,jpg,gif|max:2048",
+            "bio" => "sometimes|string|max:300"
         ]);
 
         $user = Auth::user();
