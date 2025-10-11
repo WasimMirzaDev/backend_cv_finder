@@ -72,14 +72,26 @@ class UserController extends Controller
             $user->name = $request->name;
         }
         
-        if ($request->has('address')) {
-            $user->address = $request->address;
+        // if ($request->has('address')) {
+        //     $user->address = $request->address;
+        // }
+        
+        if ($request->has('phone')) {
+            $user->phone = $request->phone;
+        }
+        
+        if ($request->has('bio')) {
+            $user->bio = $request->bio;
         }
         
         if ($request->has('email') && $request->email !== $user->email) {
             $user->email = $request->email;
             // You might want to implement email verification here
         }
+        // if ($request->has('email') && $request->email !== $user->email) {
+        //     $user->email = $request->email;
+        //     // You might want to implement email verification here
+        // }
 
         // Handle profile image upload
         if ($request->hasFile('profile_img')) {
