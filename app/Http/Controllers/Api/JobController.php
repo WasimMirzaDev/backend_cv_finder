@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use App\Models\JobApplication;
+use App\Models\GettingStartedStep;
 
 class JobController extends Controller
 {
@@ -269,6 +270,9 @@ class JobController extends Controller
             'applied' => 'sometimes|boolean',
             'status' => 'sometimes|in:prep,appSent,shortListed,1stInterview,2ndInterview,finalInterview,onHold,OfferAcctepted,UnSuccessful'
         ]);
+
+        GettingStartedStep::where('user_id', auth()->id())
+        ->update(['progress_tracker' => true]);
 
         $application = JobApplication::where('user_id', Auth::id())
             ->findOrFail($id);
