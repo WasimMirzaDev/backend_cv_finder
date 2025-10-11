@@ -62,7 +62,7 @@ class UserController extends Controller
             "phone" => "sometimes|string|max:200",
             "email" => "sometimes|email|unique:users,email," . auth()->id(),
             "profile_img" => "sometimes|image|mimes:jpeg,png,jpg,gif|max:2048",
-            "bio" => "sometimes|string|max:300"
+            "bio" => "nullable|string|max:300"
         ]);
 
         $user = Auth::user();
