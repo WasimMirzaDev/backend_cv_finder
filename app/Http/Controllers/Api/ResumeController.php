@@ -1520,6 +1520,7 @@ PROMPT;
                   ->setPaper('a4', 'portrait');
 
         // 4. Download as PDF
-        return $pdf->download('resume.pdf');
+        $filename = ($resumeData['candidateName'][0]['firstName'] ?? 'CV') . '.pdf';
+        return $pdf->download($filename);
     }
 }
