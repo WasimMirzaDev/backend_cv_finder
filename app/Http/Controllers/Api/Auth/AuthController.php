@@ -31,6 +31,11 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|max:18|confirmed',
         ]);
         
+        $verification = $this->twilio->sendVerification($request->phone);
+        return response()->json([
+            'status' => true,
+            'verification' => $verification,
+        ], 201);
         $user = User::create([
             'name' => $request->name,
             'phone' => $request->phone,
@@ -44,7 +49,6 @@ class AuthController extends Controller
             'sign_up' => true,
         ]);
         
-        // $verification = $this->twilio->sendVerification($request->phone);
 
         return response()->json([
             'status' => true,
