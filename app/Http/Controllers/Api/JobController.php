@@ -25,8 +25,8 @@ class JobController extends Controller
                 'x-rapidapi-key' => '5c3bd1c2b6msh6bc0f0900adf47dp14f5c6jsn80743d5bec82',
             ])->get('https://jsearch.p.rapidapi.com/search', [
                 'query' => $query,
-                'page' => $request->input('page', 2),
-                'num_pages' => $request->input('num_pages', 1),
+                'page' => $request->input('page', 1),
+                'num_pages' => $request->input('num_pages', 2),
                 'country' => $request->input('gl', 'us'), // Mapped from 'gl'
                 'date_posted' => $request->input('date_posted', 'week'),
             ]);
