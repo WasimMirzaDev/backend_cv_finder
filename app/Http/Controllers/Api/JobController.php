@@ -26,7 +26,7 @@ class JobController extends Controller
             ])->get('https://jsearch.p.rapidapi.com/search', [
                 'query' => $query,
                 'page' => $request->input('page', 1),
-                'num_pages' => $request->input('num_pages', 10),
+                'num_pages' => $request->input('num_pages', 3),
                 'country' => $request->input('gl', 'us'), // Mapped from 'gl'
                 'date_posted' => $request->input('date_posted', 'week'),
             ]);
