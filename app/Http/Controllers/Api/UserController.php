@@ -62,7 +62,11 @@ class UserController extends Controller
             "phone" => "sometimes|string|max:200",
             "email" => "sometimes|email|unique:users,email," . auth()->id(),
             "profile_img" => "sometimes|image|mimes:jpeg,png,jpg,gif|max:2048",
-            "bio" => "nullable|string|max:300"
+            "bio" => "nullable|string|max:300",
+            "lang" => "sometimes|string|max:10",
+            "time_zone" => "sometimes|string|max:50",
+            "email_notif" => "sometimes|boolean",
+            "push_notif" => "sometimes|boolean"
         ]);
 
         $user = Auth::user();
@@ -88,10 +92,26 @@ class UserController extends Controller
             $user->email = $request->email;
             // You might want to implement email verification here
         }
-        // if ($request->has('email') && $request->email !== $user->email) {
-        //     $user->email = $request->email;
-        //     // You might want to implement email verification here
-        // }
+
+        // Update language preference
+        if ($request->has('lang')) {
+            $user->lang = $request->lang;
+        }
+
+        // Update timezone
+        if ($request->has('time_zone')) {
+            $user->time_zone = $request->time_zone;
+        }
+
+        // Update email notification preference
+        if ($request->has('email_notif')) {
+            $user->email_notif = $request->email_notif;
+        }
+
+        // Update push notification preference
+        if ($request->has('push_notif')) {
+            $user->push_notif = $request->push_notif;
+        }
 
         // Handle profile image upload
         if ($request->hasFile('profile_img')) {
