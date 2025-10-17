@@ -78,7 +78,7 @@ class JobController extends Controller
             
                 Now process the above job data and return ONLY the JSON output:";
     
-                $gptResponse = Http::timeout(60)->withHeaders([
+                $gptResponse = Http::timeout(90)->withHeaders([
                     'Authorization' => "Bearer {$apiKey}",
                     'Content-Type' => 'application/json',
                 ])->post('https://api.openai.com/v1/chat/completions', [
