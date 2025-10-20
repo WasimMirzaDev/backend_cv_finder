@@ -25,7 +25,8 @@ class Subscription extends Model
         'status',
         'trial_ends_at',
         'ends_at',
-        'starts_at'
+        'starts_at',
+        'cancel_at_period_end'
     ];
 
     /**
@@ -39,7 +40,8 @@ class Subscription extends Model
         'starts_at' => 'datetime',
         'sub_id' => 'string',
         'cus_id' => 'string',
-        'status' => 'string'
+        'status' => 'string',
+        'cancel_at_period_end' => 'boolean'
     ];
 
     /**
