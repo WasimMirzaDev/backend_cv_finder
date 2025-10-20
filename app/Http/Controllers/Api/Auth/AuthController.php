@@ -10,6 +10,8 @@ use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Stripe\Stripe;
+use Stripe\Customer;
 
 class AuthController extends Controller
 {   
@@ -36,12 +38,32 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|max:18|confirmed',
         ]);
         
+        // Create Stripe customer
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+        $stripeCustomer = null;
+        
+        try {
+            $stripeCustomer = Customer::create([
+                'email' => $request->email,
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'metadata' => [
+                    'user_type' => 'registered_user'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Stripe customer creation failed during registration', [
+                'email' => $request->email,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         $user = User::create([
             'name' => $request->name,
             'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'stripe_customer_id' => $stripeCustomer ? $stripeCustomer->id : null,
         ]);
         
         

@@ -49,70 +49,129 @@ class StripeController extends Controller
     }
 
 
-    public function createSubscriptionSession(Request $request, $planId)
-    {
-        $plan = Plan::find($planId);
-        if (!$plan) {
-            return response()->json([
-                'error' => 'Plan not found',
-            ], 404);
-        }
+public function createSubscriptionSession(Request $request, $planId)
+{
+    $plan = Plan::find($planId);
+    if (!$plan) {
+        return response()->json([
+            'error' => 'Plan not found',
+        ], 404);
+    }
 
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-
-        if($request->isFreeTrial){
-            $session = Session::create([
-                'payment_method_types' => ['card'],
-                'mode' => 'subscription',
-                'line_items' => [[
-                    'price' => $plan->stripe_price_id,
-                    'quantity' => 1,
-                ]],
-                'allow_promotion_codes' => true,
-                'subscription_data' => [
-                    'trial_period_days' => 7,
-                    'metadata' => [
-                        'type' => 'subscription',
-                        'user_id' => Auth::id() ?? null,
-                    ],
-                ],
-                'customer_email' => Auth::user()->email ?? '',
-                'success_url' => 'https://portal.mypathfinder.uk/welcome?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'https://portal.mypathfinder.uk/',
-            ]);
+    Stripe::setApiKey(env('STRIPE_SECRET'));
     
-            return response()->json([
-                'sessionId' => $session->id,
-                'checkoutUrl' => $session->url,
-            ]);
-        }
-        else{
-
-            $session = Session::create([
-                'payment_method_types' => ['card'],
-                'mode' => 'subscription',
-                'line_items' => [[
-                    'price' => $plan->stripe_price_id,
-                    'quantity' => 1,
-                ]],
-                'allow_promotion_codes' => true,
-                'subscription_data' => [
-                    'metadata' => [
-                        'type' => 'subscription',
-                        'user_id' => Auth::id() ?? null,
-                    ],
-                ],
-                'customer_email' => Auth::user()->email ?? '',
-                'success_url' => 'https://portal.mypathfinder.uk/welcome/?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'https://portal.mypathfinder.uk/',
-            ]);
+    $user = Auth::user();
+    $customerId = $user->stripe_customer_id;
     
-            return response()->json([
-                'sessionId' => $session->id,
-                'checkoutUrl' => $session->url,
+    // Create Stripe customer if doesn't exist
+    if (!$customerId) {
+        try {
+            $customer = \Stripe\Customer::create([
+                'email' => $user->email,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'metadata' => [
+                    'user_id' => $user->id
+                ]
             ]);
+            $customerId = $customer->id;
+            $user->stripe_customer_id = $customerId;
+            $user->save();
+        } catch (\Exception $e) {
+            \Log::error('Failed to create Stripe customer', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'error' => 'Failed to create customer',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
+
+    // Check if customer already has any subscriptions
+    $hasExistingSubscription = false;
+    $hasUsedTrial = false;
+
+    try {
+        // Get customer's subscriptions
+        $subscriptions = \Stripe\Subscription::all([
+            'customer' => $customerId,
+            'status' => 'all', // Include past subscriptions
+            'limit' => 10
+        ]);
+
+        foreach ($subscriptions->data as $subscription) {
+            // If customer has any active or past due subscription, they've used the service
+            if (in_array($subscription->status, ['active', 'past_due', 'canceled', 'incomplete'])) {
+                $hasExistingSubscription = true;
+                
+                // Check if this subscription had a trial
+                if ($subscription->trial_start !== null) {
+                    $hasUsedTrial = true;
+                    break;
+                }
+            }
+        }
+
+        // Alternative: Check if customer has any payment methods (indicates they've paid before)
+        $paymentMethods = \Stripe\PaymentMethod::all([
+            'customer' => $customerId,
+            'type' => 'card',
+        ]);
+        
+        $hasPaymentMethods = count($paymentMethods->data) > 0;
+
+    } catch (\Exception $e) {
+        \Log::error('Error checking customer subscription history', [
+            'customer_id' => $customerId,
+            'error' => $e->getMessage()
+        ]);
+    }
+
+    // Determine if free trial should be offered
+    $shouldOfferTrial = $request->isFreeTrial && 
+                       !$hasUsedTrial && 
+                       !$hasExistingSubscription && 
+                       !$hasPaymentMethods;
+
+    $subscriptionData = [
+        'metadata' => [
+            'type' => 'subscription',
+            'user_id' => Auth::id() ?? null,
+        ],
+    ];
+
+    // Only add trial if eligible
+    if ($shouldOfferTrial) {
+        $subscriptionData['trial_period_days'] = 7;
+        
+        // Mark in user's record that they've used trial
+        $user->trial_used = true;
+        $user->trial_used_at = now();
+        $user->save();
+    }
+
+    $session = Session::create([
+        'payment_method_types' => ['card'],
+        'mode' => 'subscription',
+        'customer' => $customerId,
+        'line_items' => [[
+            'price' => $plan->stripe_price_id,
+            'quantity' => 1,
+        ]],
+        'allow_promotion_codes' => true,
+        'subscription_data' => $subscriptionData,
+        'success_url' => 'https://portal.mypathfinder.uk/welcome?session_id={CHECKOUT_SESSION_ID}',
+        'cancel_url' => 'https://portal.mypathfinder.uk/',
+    ]);
+
+    return response()->json([
+        'sessionId' => $session->id,
+        'checkoutUrl' => $session->url,
+        'hasTrial' => $shouldOfferTrial,
+    ]);
+}
 
     public function cancelSubscription(Request $request)
     {

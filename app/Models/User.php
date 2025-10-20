@@ -37,6 +37,9 @@ class User extends Authenticatable
         'role_id',
         'education_level_id',
         'linkedin_profile_url',
+        'stripe_customer_id',
+        'trial_used',
+        'trial_used_at',
         'password',
     ];
 
@@ -47,6 +50,8 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'stripe_customer_id',
+        'trial_used_at',
         'remember_token',
     ];
 
