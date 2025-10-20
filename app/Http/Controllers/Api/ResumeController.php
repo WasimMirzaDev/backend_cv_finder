@@ -1132,402 +1132,98 @@ PROMPT;
 
     public function download($id, Request $request)
     {
-        // 1. Get resume record from DB
-        $resume = CvResume::findOrFail($id);
+        try {
+            // 1. Get resume record from DB
+            $resume = CvResume::findOrFail($id);
 
-        if(!$resume){
+            if(!$resume){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume not found'
+                ], 404);
+            }
+            
+            // 2. Validate template parameter
+            $template = $request->input('template');
+            if (!$template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template parameter is required'
+                ], 400);
+            }
+            $template = strtolower($template);
+            
+            // Validate template exists
+            $validTemplates = ['classic', 'default', 'luxe', 'modern'];
+            if (!in_array($template, $validTemplates)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid template. Valid templates: ' . implode(', ', $validTemplates)
+                ], 400);
+            }
+
+            // 3. Get and decode resume data
+            $resumeData = $resume->cv_resumejson;
+            
+            // Check if cv_resumejson is null or empty
+            if (empty($resumeData)) {
+                \Log::error('Resume data is empty', ['resume_id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume data is empty'
+                ], 400);
+            }
+            
+            // If cv_resumejson is a JSON string, decode it
+            if (is_string($resumeData)) {
+                $decoded = json_decode($resumeData, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    \Log::error('Failed to decode resume JSON', [
+                        'resume_id' => $id,
+                        'error' => json_last_error_msg()
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid resume data format: ' . json_last_error_msg()
+                    ], 400);
+                }
+                $resumeData = $decoded;
+            }
+            
+            // Log resume data structure for debugging
+            \Log::info('Resume data structure', [
+                'resume_id' => $id,
+                'data_keys' => is_array($resumeData) ? array_keys($resumeData) : 'not an array',
+                'data_type' => gettype($resumeData)
+            ]);
+            
+            // Validate that resumeData is an array
+            if (!is_array($resumeData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume data is not in the correct format'
+                ], 400);
+            }
+
+            // 4. Pass it to Blade template
+            $pdf = Pdf::loadView($template.'-template', compact('resumeData'))
+                      ->setPaper('a4', 'portrait');
+
+            // 5. Download as PDF
+            $filename = ($resumeData['candidateName'][0]['firstName'] ?? 'CV') . '.pdf';
+            return $pdf->download($filename);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error generating PDF', [
+                'resume_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Resume not found'
-            ], 404);
+                'message' => 'Error generating PDF: ' . $e->getMessage()
+            ], 500);
         }
-        // $resume = 
-        // '{
-        //     "id": 335,
-        //     "user_id": 81,
-        //     "title": "My Resume",
-        //     "cv_path": null,
-        //     "cv_resumejson": {
-        //         "candidateName": [
-        //             {
-        //                 "firstName": "Faraz",
-        //                 "familyName": "Mehmood"
-        //             }
-        //         ],
-        //         "headline": "Experienced PHP\/Laravel Developer",
-        //         "website": null,
-        //         "preferredWorkLocation": null,
-        //         "willingToRelocate": null,
-        //         "objective": null,
-        //         "association": null,
-        //         "hobby": null,
-        //         "patent": null,
-        //         "publication": null,
-        //         "referee": null,
-        //         "dateOfBirth": null,
-        //         "headshot": null,
-        //         "nationality": null,
-        //         "email": [
-        //             "farazmehmood2563@gmail.com"
-        //         ],
-        //         "phoneNumber": [
-        //             {
-        //                 "rawText": "+92 314 2563223",
-        //                 "countryCode": "PK",
-        //                 "nationalNumber": "3142563223",
-        //                 "formattedNumber": "+92 314 2563223",
-        //                 "internationalCountryCode": "92"
-        //             }
-        //         ],
-        //         "location": {
-        //             "city": "Faisalabad",
-        //             "state": "Punjab",
-        //             "poBox": null,
-        //             "street": null,
-        //             "country": "Pakistan",
-        //             "latitude": null,
-        //             "formatted": "Faisalabad, Punjab, Pakistan",
-        //             "longitude": null,
-        //             "rawInput": "Faisalabad, Punjab, Pakistan",
-        //             "stateCode": null,
-        //             "postalCode": null,
-        //             "countryCode": "PK",
-        //             "streetNumber": null,
-        //             "apartmentNumber": null
-        //         },
-        //         "availability": null,
-        //         "summary": {
-        //             "paragraph": "Passionate web developer with over 5 years of experience in creating scalable, high-performance applications using modern frameworks and technologies. Proficient in PHP, Laravel, MySQL, and RESTful APIs, with a proven track record of improving application performance by 30%. Demonstrated leadership in developing a high-traffic e-commerce platform and collaborating effectively within teams to deliver quality software solutions.",
-        //             "years_experience": 5,
-        //             "confidence": "stated"
-        //         },
-        //         "expectedSalary": null,
-        //         "education": [
-        //             {
-        //                 "educationAccreditation": null,
-        //                 "educationOrganization": "Tips College Of Commerce D Ground Campus",
-        //                 "educationDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "2021",
-        //                         "year": 2021,
-        //                         "month": null,
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2017",
-        //                         "year": 2017,
-        //                         "month": null,
-        //                         "isCurrent": false
-        //                     },
-        //                     "durationInMonths": 48
-        //                 },
-        //                 "educationMajor": [],
-        //                 "educationLevel": {
-        //                     "id": null,
-        //                     "label": "Bachelors Degree",
-        //                     "value": "Bachelors"
-        //                 }
-        //             },
-        //             {
-        //                 "educationAccreditation": null,
-        //                 "educationOrganization": "Tips College Of Commerce D Ground Campus",
-        //                 "educationDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "2017",
-        //                         "year": 2017,
-        //                         "month": null,
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2015",
-        //                         "year": 2015,
-        //                         "month": null,
-        //                         "isCurrent": false
-        //                     },
-        //                     "durationInMonths": 24
-        //                 },
-        //                 "educationMajor": [],
-        //                 "educationLevel": {
-        //                     "id": null,
-        //                     "label": "Diploma",
-        //                     "value": "Diploma"
-        //                 }
-        //             }
-        //         ],
-        //         "workExperience": [
-        //             {
-        //                 "workExperienceJobTitle": "Web App Developer",
-        //                 "workExperienceOrganization": "YummyApps",
-        //                 "workExperienceDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "2001",
-        //                         "year": 2001,
-        //                         "month": "July",
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2024",
-        //                         "year": 2024,
-        //                         "month": "July",
-        //                         "isCurrent": true
-        //                     },
-        //                     "durationInMonths": null
-        //                 },
-        //                 "workExperienceDescription": "As a Web App Developer at YummyApps, I focused on developing REST APIs, integrating third-party services, and managing databases to ensure optimal performance and scalability. My role involved collaborating with cross-functional teams to deliver high-quality software solutions.",
-        //                 "highlights": {
-        //                     "minItems": 3,
-        //                     "maxItems": 7,
-        //                     "items": [
-        //                         {
-        //                             "bullet": "Developed RESTful APIs to support various web applications, enhancing functionality and user experience.",
-        //                             "impact": "Improved application performance and user engagement.",
-        //                             "keywords": "REST APIs, web applications, user experience",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Integrated third-party services to streamline operations and improve data management.",
-        //                             "impact": "Enhanced operational efficiency and data accuracy.",
-        //                             "keywords": "third-party services, data management, operational efficiency",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Managed databases with a focus on optimization and scalability, ensuring high availability.",
-        //                             "impact": "Supported high-traffic applications with minimal downtime.",
-        //                             "keywords": "database management, optimization, scalability",
-        //                             "confidence": "inferred"
-        //                         }
-        //                     ]
-        //                 },
-        //                 "workExperienceType": {
-        //                     "id": null,
-        //                     "label": "Full-time",
-        //                     "value": "Full-time"
-        //                 }
-        //             },
-        //             {
-        //                 "workExperienceJobTitle": "PHP\/Laravel Developer",
-        //                 "workExperienceOrganization": "Vitesol (Part Time)",
-        //                 "workExperienceDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "200011",
-        //                         "year": 200011,
-        //                         "month": "July",
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2024",
-        //                         "year": 2024,
-        //                         "month": "July",
-        //                         "isCurrent": true
-        //                     },
-        //                     "durationInMonths": null
-        //                 },
-        //                 "workExperienceDescription": "In my part-time role as a PHP\/Laravel Developer at Vitesol, I collaborated with team members using version control systems like Git, adhering to best practices in coding and testing to ensure quality deliverables. This experience honed my skills in teamwork and software development methodologies.",
-        //                 "highlights": {
-        //                     "minItems": 3,
-        //                     "maxItems": 7,
-        //                     "items": [
-        //                         {
-        //                             "bullet": "Collaborated with team members to develop high-quality software solutions using Laravel.",
-        //                             "impact": "Enhanced team productivity and project outcomes.",
-        //                             "keywords": "collaboration, Laravel, software development",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Utilized version control systems like Git to manage code changes effectively.",
-        //                             "impact": "Improved code quality and team coordination.",
-        //                             "keywords": "version control, Git, code management",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Followed best practices in coding and testing to ensure high-quality deliverables.",
-        //                             "impact": "Reduced bugs and improved software reliability.",
-        //                             "keywords": "best practices, coding, testing",
-        //                             "confidence": "inferred"
-        //                         }
-        //                     ]
-        //                 },
-        //                 "workExperienceType": {
-        //                     "id": null,
-        //                     "label": "Part-time",
-        //                     "value": "Part-time"
-        //                 }
-        //             },
-        //             {
-        //                 "workExperienceJobTitle": "PHP\/Laravel Developer",
-        //                 "workExperienceOrganization": "Ranksol",
-        //                 "workExperienceDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "2024",
-        //                         "year": 2024,
-        //                         "month": "June",
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2023",
-        //                         "year": 2023,
-        //                         "month": "January",
-        //                         "isCurrent": false
-        //                     },
-        //                     "durationInMonths": null
-        //                 },
-        //                 "workExperienceDescription": "As a PHP\/Laravel Developer at Ranksol, I developed and maintained robust web applications using Laravel, implementing REST APIs and ensuring code quality through unit and integration testing. This role allowed me to enhance my technical skills and contribute to successful project deliveries.",
-        //                 "highlights": {
-        //                     "minItems": 3,
-        //                     "maxItems": 7,
-        //                     "items": [
-        //                         {
-        //                             "bullet": "Developed and maintained robust web applications using Laravel framework.",
-        //                             "impact": "Delivered high-quality applications that met client requirements.",
-        //                             "keywords": "Laravel, web applications, client requirements",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Implemented REST APIs to facilitate seamless communication between front-end and back-end systems.",
-        //                             "impact": "Improved application interoperability and user experience.",
-        //                             "keywords": "REST APIs, front-end, back-end",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Ensured code quality through rigorous unit and integration testing.",
-        //                             "impact": "Minimized bugs and enhanced software reliability.",
-        //                             "keywords": "code quality, testing, reliability",
-        //                             "confidence": "inferred"
-        //                         }
-        //                     ]
-        //                 },
-        //                 "workExperienceType": {
-        //                     "id": null,
-        //                     "label": "Full-time",
-        //                     "value": "Full-time"
-        //                 }
-        //             },
-        //             {
-        //                 "workExperienceJobTitle": "Web App Developer & QA",
-        //                 "workExperienceOrganization": "Genius Mind Zone",
-        //                 "workExperienceDates": {
-        //                     "end": {
-        //                         "day": null,
-        //                         "date": "2022",
-        //                         "year": 2022,
-        //                         "month": "December",
-        //                         "isCurrent": false
-        //                     },
-        //                     "start": {
-        //                         "day": null,
-        //                         "date": "2020",
-        //                         "year": 2020,
-        //                         "month": "December",
-        //                         "isCurrent": false
-        //                     },
-        //                     "durationInMonths": null
-        //                 },
-        //                 "workExperienceDescription": "In my role as a Web App Developer & QA at Genius Mind Zone, I developed and maintained web applications while conducting thorough manual and automated testing to ensure software quality and performance. This position allowed me to gain valuable experience in both development and quality assurance.",
-        //                 "highlights": {
-        //                     "minItems": 3,
-        //                     "maxItems": 7,
-        //                     "items": [
-        //                         {
-        //                             "bullet": "Developed and maintained web applications to meet user needs and specifications.",
-        //                             "impact": "Delivered user-friendly applications that enhanced customer satisfaction.",
-        //                             "keywords": "web applications, user needs, customer satisfaction",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Conducted thorough manual and automated testing to ensure software quality.",
-        //                             "impact": "Identified and resolved issues before deployment, improving reliability.",
-        //                             "keywords": "manual testing, automated testing, software quality",
-        //                             "confidence": "inferred"
-        //                         },
-        //                         {
-        //                             "bullet": "Collaborated with cross-functional teams to deliver projects on time.",
-        //                             "impact": "Enhanced project delivery timelines and team efficiency.",
-        //                             "keywords": "collaboration, project delivery, team efficiency",
-        //                             "confidence": "inferred"
-        //                         }
-        //                     ]
-        //                 },
-        //                 "workExperienceType": {
-        //                     "id": null,
-        //                     "label": "Full-time",
-        //                     "value": "Full-time"
-        //                 }
-        //             }
-        //         ],
-        //         "totalYearsExperience": 5,
-        //         "project": null,
-        //         "achievement": [],
-        //         "rightToWork": null,
-        //         "languages": [
-        //             {
-        //                 "name": "English",
-        //                 "level": "Fluent"
-        //             },
-        //             {
-        //                 "name": "Urdu",
-        //                 "level": "Fluent"
-        //             }
-        //         ],
-        //         "skill": [
-        //             {
-        //                 "name": "PHP",
-        //                 "type": "Specialized Skill"
-        //             },
-        //             {
-        //                 "name": "Laravel",
-        //                 "type": "Specialized Skill"
-        //             },
-        //             {
-        //                 "name": "MySQL",
-        //                 "type": "Specialized Skill"
-        //             },
-        //             {
-        //                 "name": "RESTful APIs",
-        //                 "type": "Specialized Skill"
-        //             },
-        //             {
-        //                 "name": "Version Control (Git)",
-        //                 "type": "Specialized Skill"
-        //             },
-        //             {
-        //                 "name": "Testing (Unit and Integration)",
-        //                 "type": "Specialized Skill"
-        //             }
-        //         ],
-        //         "languageStyle": "Professional"
-        //     },
-        //     "file_name": null,
-        //     "file_type": null,
-        //     "file_size": null,
-        //     "is_default": false,
-        //     "is_public": false,
-        //     "last_modified_at": null,
-        //     "deleted_at": null,
-        //     "created_at": "2025-10-07T10:45:11.000000Z",
-        //     "updated_at": "2025-10-07T10:45:11.000000Z"
-        // }';
-        $template = strtolower($request->template);
-
-        // $resumeDataDecode = json_decode($resume, true);
-        // 2. Decode JSON into array
-        $resumeData = $resume->cv_resumejson;
-
-        // 3. Pass it to Blade template
-        $pdf = Pdf::loadView($template.'-template', compact('resumeData'))
-                  ->setPaper('a4', 'portrait');
-
-        // 4. Download as PDF
-        $filename = ($resumeData['candidateName'][0]['firstName'] ?? 'CV') . '.pdf';
-        return $pdf->download($filename);
     }
 }
