@@ -1134,6 +1134,13 @@ PROMPT;
     {
         // 1. Get resume record from DB
         $resume = CvResume::findOrFail($id);
+
+        if(!$resume){
+            return response()->json([
+                'success' => false,
+                'message' => 'Resume not found'
+            ], 404);
+        }
         // $resume = 
         // '{
         //     "id": 335,
