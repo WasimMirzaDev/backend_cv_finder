@@ -144,6 +144,7 @@ class StripeController extends Controller
         $subscription->ends_at = \Carbon\Carbon::createFromTimestamp(
             $subscriptionStripe->cancel_at
         );
+        $subscription->cancel_at_period_end = true;
         $subscription->save();
 
         return response()->json(['message' => 'Subscription will be cancelled at period end.']);
