@@ -115,7 +115,7 @@ class StripeController extends Controller
     }
 
     public function cancelSubscription(Request $request)
-{
+    {
     $user = Auth::user();
 
     $subscription = Subscription::where('user_id', $user->id)
@@ -129,23 +129,21 @@ class StripeController extends Controller
     \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
     try {
-        // Cancel at period end
         \Stripe\Subscription::update(
             $subscription->sub_id,
             ['cancel_at_period_end' => true]
         );
 
-           $subscriptionStripe =  \Stripe\Subscription::retrieve([
-                'id' => $subscription->sub_id,
-                'expand' => []
-            ]);
+        $subscriptionStripe =  \Stripe\Subscription::retrieve([
+            'id' => $subscription->sub_id,
+            'expand' => []
+        ]);
 
-        // Optional: record that it will end later
-        $subscription->ends_at = \Carbon\Carbon::createFromTimestamp(
-            $subscriptionStripe->cancel_at
-        );
-        $subscription->cancel_at_period_end = true;
-        $subscription->save();
+        $subscription->update([
+            'ends_at' => \Carbon\Carbon::createFromTimestamp($subscriptionStripe->cancel_at),
+            'cancel_at_period_end' => 1,
+        ]);
+
 
         return response()->json(['message' => 'Subscription will be cancelled at period end.']);
     } catch (\Exception $e) {
@@ -154,7 +152,7 @@ class StripeController extends Controller
             'error' => $e->getMessage()
         ], 500);
     }
-}
+    }
 
     public function getPaymentMethod(Request $request)
     {
