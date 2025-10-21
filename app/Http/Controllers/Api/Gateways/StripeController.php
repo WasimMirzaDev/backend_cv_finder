@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Plan;
 use App\Models\Subscription;
 
+
 class StripeController extends Controller
 {
 
@@ -334,5 +335,24 @@ public function createSubscriptionSession(Request $request, $planId)
         ]);
     
         return $updated;
+    }
+
+    public function getStripeCredit()
+    {
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+    
+        $user = Auth::user();
+        if (!$user->stripe_customer_id) {
+            return response()->json(['credit' => 0]);
+        }
+    
+        $customer =  \Stripe\Customer::retrieve($user->stripe_customer_id);
+    
+        // Stripe stores balance in CENTS & NEGATIVE means customer has CREDIT
+        $credit = $customer->balance < 0 ? abs($customer->balance) / 100 : 0;
+    
+        return response()->json([
+            'credit' => $credit,
+        ]);
     }
 }
