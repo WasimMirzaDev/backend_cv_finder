@@ -42,7 +42,7 @@
     <p>{{ $resetUrl }}</p>
     
     <div class="footer">
-        <p>Thank you,<br>{{ config('app.name') }}</p>
+        <p>Thank you,<br>MyPathfinder</p>
     </div>
 </body>
 </html>
