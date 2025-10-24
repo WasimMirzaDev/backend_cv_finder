@@ -758,303 +758,293 @@ private function extractTextFromElement($element)
 
     public function parseResumeGPT(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:pdf|max:204800', // ~200MB
-        ]);
-        $model = $request->input('model', 'gpt-4o-mini'); 
-        $file = $request->file('file');
-        $text = '';
-        $tempImagePath = null;
-    
-        try {
-            // 1. First try direct text extraction
-            $parser = new Parser();
-            $pdf = $parser->parseFile($file->getRealPath());
-            $text = trim($pdf->getText());
-    
-            // 2. Fallback to OCR if text extraction fails
-            if (strlen($text) < 100) {
-                $outputBase = public_path('ocr/pdf_to_image');
+            $request->validate([
+                'file' => 'required|file|mimes:pdf|max:204800', 
+            ]);
+            
+            $model = $request->input('model', 'gpt-4o-mini'); 
+            $file = $request->file('file');
+            
+            // Create training data directories
+            $trainingBase = public_path('training_data');
+            $pdfDir = $trainingBase . '/resume-pdfs';
+            $jsonDir = $trainingBase . '/resume-jsons';
+            $ocrDir = $trainingBase . '/ocr-outputs';
+            
+            // Ensure directories exist
+            if (!file_exists($pdfDir)) mkdir($pdfDir, 0755, true);
+            if (!file_exists($jsonDir)) mkdir($jsonDir, 0755, true);
+            if (!file_exists($ocrDir)) mkdir($ocrDir, 0755, true);
+            
+            try {
+                // Generate unique filename with timestamp
+                $timestamp = time();
+                $uniqueId = uniqid();
+                $baseFilename = "resume_{$timestamp}_{$uniqueId}";
                 
-                // Create directory if it doesn't exist
-                if (!file_exists($outputBase)) {
-                    mkdir($outputBase, 0755, true);
-                }
-    
-                $filenameBase = uniqid('page_');
-                $imagePathPrefix = "$outputBase/{$filenameBase}";
-    
-                // Convert first page to image
-                $command = sprintf(
-                    'pdftoppm -jpeg -f 1 -l 1 "%s" "%s"',
-                    escapeshellarg($file->getRealPath()),
-                    escapeshellarg($imagePathPrefix)
-                );
+                // Store original PDF
+                $pdfFilename = $baseFilename . '.pdf';
+                $pdfPath = $pdfDir . '/' . $pdfFilename;
+                $file->move($pdfDir, $pdfFilename);
                 
-                exec($command, $output, $returnCode);
-    
-                if ($returnCode !== 0) {
-                    throw new \Exception('Failed to convert PDF to image');
-                }
-    
-                $firstImage = $imagePathPrefix . '-1.jpg';
-                if (!file_exists($firstImage)) {
-                    throw new \Exception('Could not generate image for OCR');
-                }
-    
-                $tempImagePath = $firstImage;
-                $text = (new TesseractOCR($firstImage))->run();
-    
-                // Store the original PDF in public folder as well if needed
-                $pdfPath = $outputBase . '/' . uniqid('resume_') . '.pdf';
-                move_uploaded_file($file->getRealPath(), $pdfPath);
-            }else{
-                try {
-                    $apiKey = config('services.openai.api_key');
+                $text = '';
+                $usedOcr = false;
+                $ocrPath = null;
                 
-                    // Construct detailed evaluation prompt based on the framework
-                    $prompt = <<<PROMPT
-You are a resume parsing AI. Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
-
-### RAW TEXT:
-"{$text}"
-
-### REQUIRED JSON FORMAT:
-{
-  "data": {
-    "candidateName": [
-      {
-        "firstName": "",
-        "familyName": ""
-      }
-    ],
-    "headline": "",
-    "website": null,
-    "preferredWorkLocation": null,
-    "willingToRelocate": null,
-    "objective": null,
-    "association": null,
-    "hobby": null,
-    "patent": null,
-    "publication": null,
-    "referee": null,
-    "dateOfBirth": null,
-    "headshot": null,
-    "nationality": null,
-    "email": [""],
-    "phoneNumber": [
-      {
-        "rawText": "",
-        "countryCode": "",
-        "nationalNumber": "",
-        "formattedNumber": "",
-        "internationalCountryCode": ""
-      }
-    ],
-    "location": {
-      "city": "",
-      "state": "",
-      "poBox": null,
-      "street": null,
-      "country": "",
-      "latitude": null,
-      "formatted": "",
-      "longitude": null,
-      "rawInput": "",
-      "stateCode": "",
-      "postalCode": null,
-      "countryCode": "",
-      "streetNumber": null,
-      "apartmentNumber": null
-    },
-    "availability": null,
-    "summary": "",
-    "expectedSalary": null,
-    "education": [
-      {
-        "educationAccreditation": "",
-        "educationOrganization": "",
-        "educationDates": {
-          "end": {
-            "day": null,
-            "date": "",
-            "year": null,
-            "month": null,
-            "isCurrent": false
-          },
-          "start": {
-            "day": null,
-            "date": "",
-            "year": null,
-            "month": null,
-            "isCurrent": false
-          },
-          "durationInMonths": null
-        },
-        "educationMajor": [],
-        "educationLevel": {
-          "id": null,
-          "label": "",
-          "value": ""
-        }
-      }
-    ],
-    "workExperience": [
-      {
-        "workExperienceJobTitle": "",
-        "workExperienceOrganization": "",
-        "workExperienceDates": {
-          "end": {
-            "day": null,
-            "date": "",
-            "year": null,
-            "month": null,
-            "isCurrent": true
-          },
-          "start": {
-            "day": null,
-            "date": "",
-            "year": null,
-            "month": null,
-            "isCurrent": false
-          },
-          "durationInMonths": null
-        },
-        "workExperienceDescription": "",
-        "workExperienceType": {
-          "id": null,
-          "label": "",
-          "value": ""
-        }
-      }
-    ],
-    "totalYearsExperience": null,
-    "project": null,
-    "achievement": null,
-    "rightToWork": null,
-    "languages": [
-      {
-        "name": "",
-        "level": null
-      }
-    ],
-    "skill": [
-      {
-        "name": "",
-        "type": "Specialized Skill"
-      }
-    ]
-  }
-}
-
-Rules:
-- Respond ONLY with JSON — no extra commentary.
-- Leave fields as `null` if the value is unknown or not found.
-- Ensure `rawText` contains the same original content provided.
-PROMPT;
-        
-                    $gptResponse = Http::timeout(60)->withHeaders([
-                        'Authorization' => "Bearer {$apiKey}",
-                        'Content-Type' => 'application/json',
-                    ])->post('https://api.openai.com/v1/chat/completions', [
-                        'model' => $model, // Dynamic model selection
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => 'You are a professional JSON resume parser. Respond ONLY with valid full JSON.'
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => $prompt
-                            ]
-                        ],
-                        'temperature' => 0.0, // Minimize randomness
-                        'response_format' => ['type' => 'json_object'], // Ensure JSON output
-                        'max_tokens' => 2048, // Allow for detailed evaluation
-                    ]);
-
+                // 1. First try direct text extraction
+                $parser = new Parser();
+                $pdf = $parser->parseFile($pdfPath);
+                $text = trim($pdf->getText());
                 
-                    $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
-                    $parsedData = json_decode($evaluation, true);
-
-                    if (isset($evaluation)) {
-                        $aiText = $evaluation;
-        
-                        // Extract only the JSON part
-                        $jsonStart = strpos($aiText, '{');
-                        if ($jsonStart !== false) {
-                            $jsonString = substr($aiText, $jsonStart);
-                            $decoded = json_decode($jsonString, true);
-        
-                            if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
-                                return response()->json($decoded);
-                            }
-        
-                            return response()->json([
-                                'error' => 'Invalid JSON from GPT-4o',
-                                'raw' => $aiText,
-                            ], 500);
-                        }
-        
-                        return response()->json([
-                            'error' => 'No JSON found in GPT-4o response',
-                            'raw' => $aiText,
-                        ], 500);
-                    }
-
-                    // return $parsedData;
-
-                    if ($gptResponse->json()) {
-                        $pdfParsed = new PdfParsed();
-                        $pdfParsed->ip_address = $request->ip();
-                        $pdfParsed->user_agent = $request->userAgent();
-                        if (isset($parsedData['data']['candidateName'][0]['firstName'], $parsedData['data']['candidateName'][0]['familyName'])) {
-                            $pdfParsed->full_name = $parsedData['data']['candidateName'][0]['firstName'] . ' ' . $parsedData['data']['candidateName'][0]['familyName'];
-                        }
-                        $pdfParsed->file_name = $file->getClientOriginalName();
-                        $pdfParsed->parsed_data = $parsedData;
-                        $pdfParsed->save();
-                        return response()->json([
-                            'success' => true,
-                            'data' => $parsedData
-                        ]);
-                    }
-
+                // 2. Fallback to OCR if text extraction fails
+                if (strlen($text) < 100) {
+                    $usedOcr = true;
                     
-                } catch (\Exception $e) {
-                    return response()->json(['error' => 'Failed to get evaluation from AI model', 'details' => $e->getMessage()], 500);
+                    // Use Python script for OCR
+                    $pythonPath = '/var/www/html/backend_cv_finder/env/bin/python';
+                    $scriptPath = public_path('scripts/parse_resume.py');
+                    $command = sprintf(
+                        '%s %s "%s"',
+                        escapeshellarg($pythonPath),
+                        escapeshellarg($scriptPath),
+                        str_replace('"', '\"', $pdfPath)
+                    );
+                    
+                    $output = shell_exec($command . ' 2>&1');
+                    $cleanOutput = mb_convert_encoding(trim($output), 'UTF-8', 'UTF-8');
+                    
+                    // Save OCR output to file
+                    $ocrFilename = $baseFilename . '_ocr.txt';
+                    $ocrPath = $ocrDir . '/' . $ocrFilename;
+                    file_put_contents($ocrPath, $cleanOutput);
+                    
+                    $text = $cleanOutput;
                 }
-            }
+                
+                // Process with GPT regardless of OCR or direct extraction
+                $apiKey = config('services.openai.api_key');
+                
+                $prompt = <<<PROMPT
+                You are a resume parsing AI. Analyze the candidate's CV and extract structured information in the following JSON format. Fill as many fields as possible based on the text.
+                
+                ### RAW TEXT:
+                "{$text}"
+                
+                ### REQUIRED JSON FORMAT:
+                {
+                "data": {
+                    "candidateName": [
+                    {
+                        "firstName": "",
+                        "familyName": ""
+                    }
+                    ],
+                    "headline": "",
+                    "website": null,
+                    "preferredWorkLocation": null,
+                    "willingToRelocate": null,
+                    "objective": null,
+                    "association": null,
+                    "hobby": null,
+                    "patent": null,
+                    "publication": null,
+                    "referee": null,
+                    "dateOfBirth": null,
+                    "headshot": null,
+                    "nationality": null,
+                    "email": [""],
+                    "phoneNumber": [
+                    {
+                        "rawText": "",
+                        "countryCode": "",
+                        "nationalNumber": "",
+                        "formattedNumber": "",
+                        "internationalCountryCode": ""
+                    }
+                    ],
+                    "location": {
+                    "city": "",
+                    "state": "",
+                    "poBox": null,
+                    "street": null,
+                    "country": "",
+                    "latitude": null,
+                    "formatted": "",
+                    "longitude": null,
+                    "rawInput": "",
+                    "stateCode": "",
+                    "postalCode": null,
+                    "countryCode": "",
+                    "streetNumber": null,
+                    "apartmentNumber": null
+                    },
+                    "availability": null,
+                    "summary": "",
+                    "expectedSalary": null,
+                    "education": [
+                    {
+                        "educationAccreditation": "",
+                        "educationOrganization": "",
+                        "educationDates": {
+                        "end": {
+                            "day": null,
+                            "date": "",
+                            "year": null,
+                            "month": null,
+                            "isCurrent": false
+                        },
+                        "start": {
+                            "day": null,
+                            "date": "",
+                            "year": null,
+                            "month": null,
+                            "isCurrent": false
+                        },
+                        "durationInMonths": null
+                        },
+                        "educationMajor": [],
+                        "educationLevel": {
+                        "id": null,
+                        "label": "",
+                        "value": ""
+                        }
+                    }
+                    ],
+                    "workExperience": [
+                    {
+                        "workExperienceJobTitle": "",
+                        "workExperienceOrganization": "",
+                        "workExperienceDates": {
+                        "end": {
+                            "day": null,
+                            "date": "",
+                            "year": null,
+                            "month": null,
+                            "isCurrent": true
+                        },
+                        "start": {
+                            "day": null,
+                            "date": "",
+                            "year": null,
+                            "month": null,
+                            "isCurrent": false
+                        },
+                        "durationInMonths": null
+                        },
+                        "workExperienceDescription": "",
+                        "workExperienceType": {
+                        "id": null,
+                        "label": "",
+                        "value": ""
+                        }
+                    }
+                    ],
+                    "totalYearsExperience": null,
+                    "project": null,
+                    "achievement": null,
+                    "rightToWork": null,
+                    "languages": [
+                    {
+                        "name": "",
+                        "level": null
+                    }
+                    ],
+                    "skill": [
+                    {
+                        "name": "",
+                        "type": "Specialized Skill"
+                    }
+                    ]
+                }
+                }
+                
+                Rules:
+                - Respond ONLY with JSON — no extra commentary.
+                - Leave fields as `null` if the value is unknown or not found.
+                - Ensure `rawText` contains the same original content provided.
+                PROMPT;
+                
+                $gptResponse = Http::timeout(60)->withHeaders([
+                    'Authorization' => "Bearer {$apiKey}",
+                    'Content-Type' => 'application/json',
+                ])->post('https://api.openai.com/v1/chat/completions', [
+                    'model' => $model,
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are a professional JSON resume parser. Respond ONLY with valid full JSON.'
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'temperature' => 0.0,
+                    'response_format' => ['type' => 'json_object'],
+                    'max_tokens' => 2048,
+                ]);
 
+                $evaluation = $gptResponse->json()['choices'][0]['message']['content'] ?? null;
+                $parsedData = json_decode($evaluation, true);
 
-            return response()->json([
-                'success' => true,
-                'text' => $text,
-                'file_name' => $file->getClientOriginalName(),
-                // Add the public URL if you want to access the generated files
-                'image_url' => isset($firstImage) ? asset(str_replace(public_path(), '', $firstImage)) : null,
-                'pdf_url' => isset($pdfPath) ? asset(str_replace(public_path(), '', $pdfPath)) : null,
-            ]);
-    
-        } catch (\Exception $e) {
-            // Clean up temp files
-            if ($tempImagePath && file_exists($tempImagePath)) {
-                @unlink($tempImagePath);
+                if ($evaluation) {
+                    $aiText = $evaluation;
+                    
+                    // Extract only the JSON part
+                    $jsonStart = strpos($aiText, '{');
+                    if ($jsonStart !== false) {
+                        $jsonString = substr($aiText, $jsonStart);
+                        $decoded = json_decode($jsonString, true);
+                        
+                        if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+                            $parsedData = $decoded;
+                        }
+                    }
+                }
+
+                // Save JSON to training data
+                $jsonFilename = $baseFilename . '.json';
+                $jsonPath = $jsonDir . '/' . $jsonFilename;
+                file_put_contents($jsonPath, json_encode($parsedData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                // Save to database
+                $pdfParsed = new PdfParsed();
+                $pdfParsed->ip_address = $request->ip();
+                $pdfParsed->user_agent = $request->userAgent();
+                if (isset($parsedData['data']['candidateName'][0]['firstName'], $parsedData['data']['candidateName'][0]['familyName'])) {
+                    $pdfParsed->full_name = $parsedData['data']['candidateName'][0]['firstName'] . ' ' . $parsedData['data']['candidateName'][0]['familyName'];
+                }
+                $pdfParsed->file_name = $file->getClientOriginalName();
+                $pdfParsed->parsed_data = $parsedData;
+                $pdfParsed->training_file_id = $baseFilename; // Store the unique ID for reference
+                $pdfParsed->used_ocr = $usedOcr;
+                $pdfParsed->save();
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $parsedData,
+                    'training_data' => [
+                        'file_id' => $baseFilename,
+                        'pdf_path' => asset(str_replace(public_path(), '', $pdfPath)),
+                        'json_path' => asset(str_replace(public_path(), '', $jsonPath)),
+                        'ocr_used' => $usedOcr,
+                        'ocr_path' => $usedOcr ? asset(str_replace(public_path(), '', $ocrPath)) : null,
+                        'text_length' => strlen($text)
+                    ]
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('Resume parsing failed: ' . $e->getMessage(), [
+                    'file' => $file->getClientOriginalName(),
+                    'error' => $e->getTraceAsString()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process resume: ' . $e->getMessage()
+                ], 500);
             }
-    
-            \Log::error('Resume parsing failed: ' . $e->getMessage(), [
-                'file' => $file->getClientOriginalName(),
-                'error' => $e->getTraceAsString()
-            ]);
-    
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to process resume: ' . $e->getMessage()
-            ], 500);
-        }
     }
-
-
 
 
     // public function parseResume(Request $request)

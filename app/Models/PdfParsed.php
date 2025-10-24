@@ -27,7 +27,9 @@ class PdfParsed extends Model
         'full_name',
         'file_name',
         'parsed_data',
-        'error_message'
+        'error_message',
+        'training_file_id',
+        'used_ocr',
     ];
 
     /**
