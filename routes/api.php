@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/parse-resume-gpt', [ResumeController::class, 'parseResumeGPT']);
 
 // Authentication routes
+Route::post('auth/firebase', [\App\Http\Controllers\Api\Auth\FirebaseController::class, 'authenticate']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
