@@ -21,6 +21,7 @@ class Interview extends Model
         'audio_path',
         'transcription',
         'evaluation',
+        'avg_score'
     ];
 
     /**
@@ -34,7 +35,7 @@ class Interview extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected $appends = ['status'];
+    protected $appends = ['status','latest_avg_score'];
 
     /**
      * Get the user that owns the interview.
@@ -50,6 +51,21 @@ class Interview extends Model
     public function question()
     {
         return $this->belongsTo(Question::class);
+    }
+
+    /**
+     * Get the latest average score for the user
+     *
+     * @return float|null
+     */
+    public function getLatestAvgScoreAttribute()
+    {
+        $latestInterview = self::where('question_id', $this->question_id)
+            ->whereNotNull('avg_score')
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
+        return $latestInterview ? (float)$latestInterview->avg_score : null;
     }
 
     public function getStatusAttribute()

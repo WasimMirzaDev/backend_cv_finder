@@ -357,13 +357,30 @@ class InterviewController extends Controller
         return response()->json(['error' => 'Failed to transcribe audio', 'details' => $e->getMessage()], 500);
     }
 
+    // Get the previous interview score for the same question if it exists
+    $previousInterview = Interview::where('user_id', Auth::user()->id)
+        ->where('question_id', $questionId)
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    $currentScore = $parsed['breakdown']['total']['score'];
+    
+    // Calculate weighted average (70% current score, 30% previous score if exists)
+    if ($previousInterview && $previousInterview->avg_score !== null) {
+        $avgScore = ($currentScore * 0.7) + ($previousInterview->avg_score * 0.3);
+        // Round to 2 decimal places
+        $avgScore = round($avgScore, 2);
+    } else {
+        $avgScore = $currentScore;
+    }
+
     $interview = Interview::create([
         'user_id' => Auth::user()->id,
         'question_id' => $questionId,
         'audio_path' => $audioPath,
         'transcription' => $text,
         'evaluation' => $parsed,
-        'model_used' => $model, // Store which model was used
+        'avg_score' => $avgScore
     ]);
 
     CvRecentActivity::create([
