@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Services\FirebaseTokenVerifier;
 use Illuminate\Support\Str;
+use App\Models\GettingStartedStep;
 
 class FirebaseController extends Controller
 {
@@ -41,6 +42,11 @@ class FirebaseController extends Controller
                     'firebase_uid' => $uid
                 ]
             );
+
+            $steps = GettingStartedStep::create([
+            'user_id' => $user->id,
+            'sign_up' => true,
+            ]);
 
             // Revoke existing tokens and create a new one
             $user->tokens()->delete();
