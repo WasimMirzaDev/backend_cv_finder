@@ -5,41 +5,53 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\FirebaseTokenVerifier;
 use Illuminate\Support\Str;
 
 class FirebaseController extends Controller
 {
-    public function authenticate(Request $request, \Kreait\Firebase\Auth $firebaseAuth)
+    protected $tokenVerifier;
+
+    public function __construct(FirebaseTokenVerifier $tokenVerifier)
+    {
+        $this->tokenVerifier = $tokenVerifier;
+    }
+
+    public function authenticate(Request $request)
     {
         $idToken = $request->input('idToken');
         if (!$idToken) {
-            return response()->json(['error'=>'No ID token provided'], 422);
+            return response()->json(['error' => 'No ID token provided'], 422);
         }
 
         try {
-            // Verify the Firebase ID token
-            $verifiedToken = $firebaseAuth->verifyIdToken($idToken);
-            $uid = $verifiedToken->claims()->get('sub'); // firebase uid
-            $email = $verifiedToken->claims()->get('email');
-            $name = $verifiedToken->claims()->get('name') ?? $email;
+            // Verify the Firebase ID token using our custom verifier
+            $decodedToken = $this->tokenVerifier->verifyToken($idToken);
+            
+            $uid = $decodedToken['sub']; // Firebase UID
+            $email = $decodedToken['email'];
+            $name = $decodedToken['name'] ?? ($decodedToken['email'] ?? 'User');
 
             // Find or create local user
             $user = User::firstOrCreate(
                 ['email' => $email],
-                ['name' => $name, 'password' => bcrypt(Str::random(40))]
+                [
+                    'name' => $name,
+                    'password' => bcrypt(Str::random(40)),
+                    'firebase_uid' => $uid
+                ]
             );
 
-            // Issue Laravel token (Sanctum / personal access token)
+            // Revoke existing tokens and create a new one
+            $user->tokens()->delete();
             $token = $user->createToken('web')->plainTextToken;
 
             return response()->json([
                 'user' => $user,
                 'token' => $token
             ]);
-        } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
-            return response()->json(['error' => 'Invalid ID token: '.$e->getMessage()], 401);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Server error: '.$e->getMessage()], 500);
+            return response()->json(['error' => 'Authentication failed: ' . $e->getMessage()], 401);
         }
     }
 }

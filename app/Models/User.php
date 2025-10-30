@@ -41,6 +41,7 @@ class User extends Authenticatable
         'trial_used',
         'trial_used_at',
         'password',
+        'firebase_uid',
     ];
 
     /**

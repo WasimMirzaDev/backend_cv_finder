@@ -50,4 +50,8 @@ return [
         'verify_sid' => env('TWILIO_VERIFY_SID'),
         'from' => env('TWILIO_FROM'), // Optional: If you're also sending SMS
     ],
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'public_key' => env('FIREBASE_PUBLIC_KEY'),
+    ],
 ];
